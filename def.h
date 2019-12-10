@@ -40,11 +40,4 @@ struct Slot {
     struct Metadata* meta;
     char* descriptor;
 };
-
-void initSlot(struct Slot* slot, uint8_t slot_number, FILE* file, char* descriptor) {
-    slot->number = slot_number;
-    slot->file = file;
-    slot->descriptor = descriptor;
-}
-
 #endif // DEF_H
