@@ -37,10 +37,15 @@
 //     return 0;
 // }
 
-void initSlot(struct Slot* slot, uint8_t slot_number, FILE* file, char* descriptor) {
+void initSlot(struct Slot* slot, uint8_t slot_number, char* file_name) {
+    char dir[100] = "./slots/";
+    strcat(dir, file_name);
+    strcat(dir, ".bin");
+    puts(dir);
+
     slot->number = slot_number;
-    slot->file = file;
-    slot->descriptor = descriptor;
+    slot->file = fopen(dir, "r+");
+    slot->descriptor = file_name;
 }
 
 bool get_slot_metadata(struct Slot* slot, struct metadata* meta) {
@@ -50,8 +55,11 @@ bool get_slot_metadata(struct Slot* slot, struct metadata* meta) {
     fread(&(meta->num_blocks), sizeof(uint16_t), 1, slot->file);
     rewind(slot->file);
 
-    //Printed slot data
-    printf("Metadata of %s:\n", slot->descriptor);
+    return true;
+}
+
+void print_metadata(char* descriptor, struct metadata* meta) {
+    printf("Metadata of %s:\n", descriptor);
     printf("\tSlot status: ");
     switch (meta->status)
     {
@@ -77,7 +85,6 @@ bool get_slot_metadata(struct Slot* slot, struct metadata* meta) {
             printf("%x", meta->crc[i]);
     }
     printf("\n");
-    return true;
 }
 
 bool set_boot_slot(struct Slot* slot, bool always) {
@@ -101,7 +108,7 @@ bool erase(struct Slot* slot) {
     } else if(resp != 'N') {
         printf("Invalid response. Erase canceled");
     }
-    return true;
+    return false;
 }
 
 bool start_update(struct Slot* slot, struct metadata* meta, const char* update) {

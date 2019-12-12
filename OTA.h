@@ -1,17 +1,17 @@
-#include <stdio.h>
+#include <stdbool.h>
 #include "def.h"
 
 #ifndef OTA_H_
 #define OTA_H_
 
-int flag = 0;
 FILE* update_file;
 struct Slot* current_slot;
 struct Slot* updating_slot;
 
+void initSlot(struct Slot* slot, uint8_t slot_number, char* file_name);
 bool set_boot_slot(struct Slot* slot, bool always);
 bool get_slot_metadata(struct Slot* slot, struct metadata* meta);
-void print_metadata(struct metadata* meta);
+void print_metadata(char* descriptor, struct metadata* meta);
 bool erase(struct Slot* slot);
 
 bool start_update(struct Slot* slot, struct metadata* meta, const char* update);
