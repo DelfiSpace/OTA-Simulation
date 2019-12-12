@@ -11,7 +11,7 @@ void print_metadata(char* descriptor, struct metadata* meta);
 bool erase(struct Slot* slot);
 
 bool start_update(struct Slot* slot, struct metadata* meta, const char* update);
-void stop_update();
+bool stop_update();
 
 bool get_next_blocks(uint8_t* next_block);
 bool send_block(uint8_t* block);

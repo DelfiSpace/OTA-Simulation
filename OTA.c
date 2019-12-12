@@ -12,15 +12,15 @@
 FILE* update_file;
 struct Slot* current_slot;
 struct Slot* updating_slot;
+fpos_t* update_pointer;
 
 void initSlot(struct Slot* slot, uint8_t slot_number, char* file_name) {
     char dir[100] = "./slots/";
     strcat(dir, file_name);
     strcat(dir, ".bin");
-    puts(dir);
 
     slot->number = slot_number;
-    slot->file = fopen(dir, "r+");
+    slot->file = dir;
     slot->descriptor = file_name;
 }
 
@@ -32,7 +32,6 @@ bool get_slot_metadata(struct Slot* slot, struct metadata* meta) {
     fread(meta->crc, sizeof(uint8_t), CRC_SIZE, file);
     fread(&(meta->version), sizeof(uint32_t), 1, file);
     fread(&(meta->num_blocks), sizeof(uint16_t), 1, file);
-    rewind(slot->file);
 
     return true;
 }
@@ -104,11 +103,12 @@ bool start_update(struct Slot* slot, struct metadata* meta, const char* update) 
 
     FILE* update_file = fopen(update, "r+");
     if(update_file != NULL) {
-        putc(FULL, file);
+        putc(PARTIAL, file);
         fseek(update_file, 1, SEEK_SET);
         uint8_t buff[(METADATA_SIZE)];
         fread(buff, sizeof(uint8_t), METADATA_SIZE, update_file);
         fwrite(buff, sizeof(uint8_t), METADATA_SIZE, file);
+        fgetpos(file, update_pointer); 
         fclose(update_file);
     }
 
@@ -116,17 +116,27 @@ bool start_update(struct Slot* slot, struct metadata* meta, const char* update) 
     return true;
 }
 
-void stop_update() {
+bool stop_update() {
+    if(state != UPDATE) return false;
     state = IDLE;
+    return true;
 }
 
 bool get_next_block(uint8_t* next_block) {
+    if(state != UPDATE) return false;
     send_block(next_block);
     return true;
 }
 
 bool send_block(uint8_t* block) {
+    if(state != UPDATE) return false;
 
+    FILE* file = fopen(updating_slot->file, "r+");
+    if(file == NULL) return false;
+
+    fsetpos(file, update_pointer);
+    fwrite(block, sizeof(uint8_t), BLOCK_SIZE, file);
+    fgetpos(file, update_pointer);
     return true;
 }
 
