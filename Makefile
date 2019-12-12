@@ -1,15 +1,17 @@
 CFLAGS = -Wall
 
-ifeq ($(OS),Windows_NT)
+TARGET = ./tests/$(test)
+BIN = $(test)
 
+ifeq ($(OS),Windows_NT)
+	BIN = $(test).exe
 else
 	CFLAGS += -lcrypto
 endif
 
-TARGET = ./tests/$(test)
 
 $(TARGET): $(TARGET).c
-	gcc -o ./bin/$(test) $(TARGET).c generate.c OTA.c $(CFLAGS) 
+	gcc -o ./bin/$(BIN) $(TARGET).c generate.c OTA.c $(CFLAGS) 
 
 clean:
 	$(RM) ./bin/$(test)
