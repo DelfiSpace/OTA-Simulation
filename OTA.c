@@ -96,17 +96,17 @@ bool set_boot_slot(struct Slot* slot, bool always) {
 }
 
 bool erase(struct Slot* slot) {
-    printf("Are you sure you want to erase this slot? (Y/N)");
+    printf("Are you sure you want to erase this slot? (Y/N): ");
     char resp = toupper(getchar());
     if(resp == 'Y') {
-        printf("Erasing %s\n", slot->descriptor);
+        printf("Erasing %s\n\n", slot->descriptor);
         for(int i = 0; i <= METADATA_SIZE; i++) {
             putc(0, slot->file);
         }
         rewind(slot->file);
         return true;
     } else if(resp != 'N') {
-        printf("Invalid response. Erase canceled");
+        printf("Invalid response. Erase canceled\n\n");
     }
     return false;
 }
