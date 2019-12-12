@@ -1,4 +1,10 @@
-CFLAGS = -Wall -lcrypto
+CFLAGS = -Wall
+
+ifeq ($(OS),Windows_NT)
+
+else
+	CFLAGS += -lcrypto
+endif
 
 TARGET = ./tests/$(test)
 
