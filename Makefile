@@ -1,9 +1,9 @@
 CFLAGS = -Wall -lcrypto
 
-TARGET = ./tests/$(TEST)
+TARGET = ./tests/$(test)
 
 $(TARGET): $(TARGET).c
-	gcc -o ./bin/$(TEST) $(TARGET).c generate.c OTA.c $(CFLAGS) 
+	gcc -o ./bin/$(test) $(TARGET).c generate.c OTA.c $(CFLAGS) 
 
 clean:
-	$(RM) ./bin/$(TEST)
+	$(RM) ./bin/$(test)
