@@ -7,10 +7,10 @@
 void initSlot(struct Slot* slot, char* file_name);
 bool set_boot_slot(struct Slot* slot, bool always);
 bool get_slot_metadata(struct Slot* slot);
-void print_metadata(char* descriptor, struct metadata* meta);
+void print_metadata(struct Slot* slot);
 bool erase(struct Slot* slot);
 
-bool start_update(struct Slot* slot, struct metadata* meta, const char* update);
+bool start_update(struct Slot* slot, struct Slot* update);
 bool stop_update();
 
 bool get_next_block(uint8_t* next_block);

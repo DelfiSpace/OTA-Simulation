@@ -9,10 +9,9 @@
 
 #include "OTA.h"
 
-FILE* update_file;
 struct Slot* current_slot;
 struct Slot* updating_slot;
-fpos_t* update_pointer;
+fpos_t update_pointer;
 
 void initSlot(struct Slot* slot, char* file_name) {
     slot->file = malloc(sizeof(char)*(strlen(file_name) + 20));
@@ -40,10 +39,10 @@ bool get_slot_metadata(struct Slot* slot) {
     return true;
 }
 
-void print_metadata(char* descriptor, struct metadata* meta) {
-    printf("Metadata of %s:\n", descriptor);
+void print_metadata(struct Slot* slot) {
+    printf("Metadata of %s:\n", slot->descriptor);
     printf("\tSlot status: ");
-    switch (meta->status)
+    switch (slot->meta->status)
     {
         case EMPTY:
             printf("emtpy\n");
@@ -60,11 +59,11 @@ void print_metadata(char* descriptor, struct metadata* meta) {
         default:
             break;
     }
-    printf("\tVersion: %d\n", meta->version);
-    printf("\tNumber of blocks: %d\n", meta->num_blocks);
+    printf("\tVersion: %d\n", slot->meta->version);
+    printf("\tNumber of blocks: %d\n", slot->meta->num_blocks);
     printf("\tMD5 CRC: ");
     for(int i = 0; i < CRC_SIZE; i++) {
-            printf("%x", meta->crc[i]);
+        printf("%x", slot->meta->crc[i]);
     }
     printf("\n");
 }
@@ -97,23 +96,25 @@ bool erase(struct Slot* slot) {
     return false;
 }
 
-bool start_update(struct Slot* slot, struct metadata* meta, const char* update) {
+bool start_update(struct Slot* slot, struct Slot* update) {
     if(slot == NULL) return false;
-    if(meta->status == FULL) return false;
+    if(slot->meta->status == FULL) return false;
 
-    FILE* file = fopen(slot->file, "r+");
+    FILE* file = fopen(slot->file, "w+");
     if(file == NULL) return false;
 
     updating_slot = slot;
 
-    FILE* update_file = fopen(update, "r+");
+    FILE* update_file = fopen(update->file, "r+");
+
     if(update_file != NULL) {
+        slot->meta->status = PARTIAL;
         putc(PARTIAL, file);
         fseek(update_file, 1, SEEK_SET);
         uint8_t buff[(METADATA_SIZE)];
         fread(buff, sizeof(uint8_t), METADATA_SIZE, update_file);
         fwrite(buff, sizeof(uint8_t), METADATA_SIZE, file);
-        fgetpos(file, update_pointer); 
+        fgetpos(file, &update_pointer); 
         fclose(update_file);
     }
 
@@ -139,9 +140,9 @@ bool send_block(uint8_t* block) {
     FILE* file = fopen(updating_slot->file, "r+");
     if(file == NULL) return false;
 
-    fsetpos(file, update_pointer);
+    fsetpos(file, &update_pointer);
     fwrite(block, sizeof(uint8_t), BLOCK_SIZE, file);
-    fgetpos(file, update_pointer);
+    fgetpos(file, &update_pointer);
     return true;
 }
 
