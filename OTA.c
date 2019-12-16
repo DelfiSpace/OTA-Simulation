@@ -14,27 +14,27 @@ struct Slot* current_slot;
 struct Slot* updating_slot;
 fpos_t* update_pointer;
 
-void initSlot(struct Slot* slot, uint8_t slot_number, char* file_name) {
+void initSlot(struct Slot* slot, char* file_name) {
     slot->file = malloc(sizeof(char)*(strlen(file_name) + 20));
 
     strcpy(slot->file, "./slots/");
     strcat(slot->file, file_name);
-    strcat(slot->file, ".bin");
 
-    slot->number = slot_number;
     slot->descriptor = file_name;
+
+    get_slot_metadata(slot);
 }
 
-bool get_slot_metadata(struct Slot* slot, struct metadata* meta) {
-    printf("\n%p\n", slot->file);
+bool get_slot_metadata(struct Slot* slot) {
+    slot->meta = malloc(sizeof(struct metadata));
+
     FILE* file = fopen(slot->file, "r+");
-    printf("%p\n", slot->file);
     if(file == NULL) return false;
 
-    fread(&(meta->status), sizeof(uint8_t), 1, file);
-    fread(meta->crc, sizeof(uint8_t), CRC_SIZE, file);
-    fread(&(meta->version), sizeof(uint32_t), 1, file);
-    fread(&(meta->num_blocks), sizeof(uint16_t), 1, file);
+    fread(&(slot->meta->status), sizeof(uint8_t), 1, file);
+    fread(slot->meta->crc, sizeof(uint8_t), CRC_SIZE, file);
+    fread(&(slot->meta->version), sizeof(uint32_t), 1, file);
+    fread(&(slot->meta->num_blocks), sizeof(uint16_t), 1, file);
 
     fclose(file);
     return true;

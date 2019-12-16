@@ -35,9 +35,8 @@ struct metadata
 };
 
 struct Slot {
-    uint8_t number;
     char* file;
-    struct Metadata* meta;
+    struct metadata* meta;
     char* descriptor;
 };
 #endif // DEF_H
