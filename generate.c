@@ -21,7 +21,7 @@ bool isnumber(char* string) {
 }
 
 int generate_flash_file(int version, int num_blocks) {
-    struct metadata* meta = malloc(sizeof(struct metadata));
+    struct Metadata* meta = malloc(sizeof(struct Metadata));
     srand((unsigned int) time(NULL));
 
     meta->version = version;

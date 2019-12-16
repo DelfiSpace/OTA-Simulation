@@ -21,12 +21,11 @@ void initSlot(struct Slot* slot, char* file_name) {
 
     slot->descriptor = file_name;
 
+    slot->meta = malloc(sizeof(struct Metadata));
     get_slot_metadata(slot);
 }
 
 bool get_slot_metadata(struct Slot* slot) {
-    slot->meta = malloc(sizeof(struct metadata));
-
     FILE* file = fopen(slot->file, "r+");
     if(file == NULL) return false;
 
@@ -45,16 +44,16 @@ void print_metadata(struct Slot* slot) {
     switch (slot->meta->status)
     {
         case EMPTY:
-            printf("emtpy\n");
+            printf("Emtpy\n");
             break;
         case PARTIAL:
-            printf("partial\n");
+            printf("Partial\n");
             break;
         case FULL:
-            printf("full\n");
+            printf("Full\n");
             break;
         case TRANSMISSION:
-            printf("transmission\n");
+            printf("Transmission\n");
             break;
         default:
             break;
@@ -110,7 +109,7 @@ bool start_update(struct Slot* slot, struct Slot* update) {
     if(update_file != NULL) {
         slot->meta->status = PARTIAL;
         putc(PARTIAL, file);
-        
+
         fseek(update_file, 1, SEEK_SET);
 
         uint8_t buff[(METADATA_SIZE)];

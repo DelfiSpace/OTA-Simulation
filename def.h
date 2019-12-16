@@ -25,7 +25,7 @@ enum update_status{
     UPDATE    
 } state;
 
-struct metadata
+struct Metadata
 {
     enum slot_status status;
     uint32_t version;
@@ -36,7 +36,7 @@ struct metadata
 
 struct Slot {
     char* file;
-    struct metadata* meta;
+    struct Metadata* meta;
     char* descriptor;
 };
 #endif // DEF_H
