@@ -110,11 +110,15 @@ bool start_update(struct Slot* slot, struct Slot* update) {
     if(update_file != NULL) {
         slot->meta->status = PARTIAL;
         putc(PARTIAL, file);
+        
         fseek(update_file, 1, SEEK_SET);
+
         uint8_t buff[(METADATA_SIZE)];
         fread(buff, sizeof(uint8_t), METADATA_SIZE, update_file);
         fwrite(buff, sizeof(uint8_t), METADATA_SIZE, file);
+
         fgetpos(file, &update_pointer); 
+
         fclose(update_file);
     }
 
@@ -143,6 +147,7 @@ bool send_block(uint8_t* block) {
     fsetpos(file, &update_pointer);
     fwrite(block, sizeof(uint8_t), BLOCK_SIZE, file);
     fgetpos(file, &update_pointer);
+    ;
     return true;
 }
 

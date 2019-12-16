@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     }
 
     uint8_t* block = malloc(sizeof(uint8_t)*BLOCK_SIZE);
-    fseek(update_file, METADATA_SIZE, SEEK_SET);
+    fseek(update_file, METADATA_SIZE+1, SEEK_SET);
 
     if(!start_update(slot0, update)) printf("Error while starting update!");
     printf("Start Updating...\n");
