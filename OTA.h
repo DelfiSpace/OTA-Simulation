@@ -16,7 +16,7 @@ bool stop_update();
 bool get_next_block(uint8_t* next_block);
 bool send_block(uint8_t* block);
 
-bool check_md5(struct Slot* slot, uint8_t* md5);
+bool check_md5(struct Slot* slot);
 bool get_block_crc(uint16_t* crc, uint8_t* block);
 
 #endif

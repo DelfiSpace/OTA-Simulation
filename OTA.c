@@ -146,12 +146,29 @@ bool send_block(uint8_t* block) {
     fsetpos(file, &update_pointer);
     fwrite(block, sizeof(uint8_t), BLOCK_SIZE, file);
     fgetpos(file, &update_pointer);
-    ;
+    
     return true;
 }
 
-bool check_md5(struct Slot* slot, uint8_t* md5) {
-    return true;
+bool check_md5(struct Slot* slot) {
+    FILE* file = fopen(slot->file, "r");
+    if(file == NULL) return false;
+
+    uint8_t digest[CRC_SIZE];
+    MD5_CTX md5_c;
+    uint8_t* block = malloc(sizeof(uint8_t)*BLOCK_SIZE);
+
+    fseek(file, METADATA_SIZE+1, SEEK_SET);
+
+    MD5_Init(&md5_c);
+    for(int i = 0; i < slot->meta->num_blocks; i++) {
+        fread(block, sizeof(uint8_t), BLOCK_SIZE, file);
+        MD5_Update(&md5_c, block, BLOCK_SIZE);
+    }
+
+    MD5_Final(digest, &md5_c);
+    if(memcmp(digest, slot->meta->crc, CRC_SIZE) == 0) return true;
+    return false;
 }
 
 bool get_block_crc(uint16_t* crc, uint8_t* block) {
