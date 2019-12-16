@@ -8,14 +8,12 @@ int main(int argc, char* argv[]) {
     struct Slot* slot0 = malloc(sizeof(struct Slot));
 
     initSlot(slot0, 0, "slot0");
-
-    if(slot0->file == NULL) {
-        fprintf(stderr, "Can't open  file\n");
-        return -1;
-    }
+    printf("%p\n", slot0->file);
 
     get_slot_metadata(slot0, meta);
+    printf("%p\n", slot0->file);
 
     print_metadata(slot0->descriptor, meta);
+    printf("%p\n", slot0->file);
     return 0;
 }

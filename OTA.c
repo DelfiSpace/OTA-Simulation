@@ -15,17 +15,20 @@ struct Slot* updating_slot;
 fpos_t* update_pointer;
 
 void initSlot(struct Slot* slot, uint8_t slot_number, char* file_name) {
-    char dir[100] = "./slots/";
-    strcat(dir, file_name);
-    strcat(dir, ".bin");
+    slot->file = malloc(sizeof(char)*(strlen(file_name) + 20));
+
+    strcpy(slot->file, "./slots/");
+    strcat(slot->file, file_name);
+    strcat(slot->file, ".bin");
 
     slot->number = slot_number;
-    slot->file = dir;
     slot->descriptor = file_name;
 }
 
 bool get_slot_metadata(struct Slot* slot, struct metadata* meta) {
+    printf("\n%p\n", slot->file);
     FILE* file = fopen(slot->file, "r+");
+    printf("%p\n", slot->file);
     if(file == NULL) return false;
 
     fread(&(meta->status), sizeof(uint8_t), 1, file);
@@ -33,6 +36,7 @@ bool get_slot_metadata(struct Slot* slot, struct metadata* meta) {
     fread(&(meta->version), sizeof(uint32_t), 1, file);
     fread(&(meta->num_blocks), sizeof(uint16_t), 1, file);
 
+    fclose(file);
     return true;
 }
 
@@ -89,6 +93,7 @@ bool erase(struct Slot* slot) {
     } else if(resp != 'N') {
         printf("Invalid response. Erase canceled\n\n");
     }
+    fclose(file);
     return false;
 }
 
@@ -124,8 +129,8 @@ bool stop_update() {
 
 bool get_next_block(uint8_t* next_block) {
     if(state != UPDATE) return false;
-    send_block(next_block);
-    return true;
+    
+    return send_block(next_block);;
 }
 
 bool send_block(uint8_t* block) {

@@ -13,7 +13,7 @@ bool erase(struct Slot* slot);
 bool start_update(struct Slot* slot, struct metadata* meta, const char* update);
 bool stop_update();
 
-bool get_next_blocks(uint8_t* next_block);
+bool get_next_block(uint8_t* next_block);
 bool send_block(uint8_t* block);
 
 bool check_md5(struct Slot* slot, uint8_t* md5);
