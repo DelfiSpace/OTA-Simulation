@@ -14,10 +14,10 @@ enum flags {
 };
 
 enum slot_status{
-    EMPTY,
-    PARTIAL,
-    FULL,
-    TRANSMISSION
+    EMPTY = 0x00,
+    PARTIAL = 0x01,
+    FULL = 0x02,
+    TRANSMISSION = 0x04
 };
 
 enum update_status{
