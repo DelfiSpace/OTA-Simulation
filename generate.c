@@ -20,13 +20,15 @@ bool isnumber(char* string) {
     return true;
 }
 
-int generate_flash_file(int version, int num_blocks) {
+int generate_flash_file(int version, int num_bytes) {
     struct Metadata* meta = malloc(sizeof(struct Metadata));
     srand((unsigned int) time(NULL));
 
     meta->version = version;
 
-    meta->num_blocks = num_blocks;
+    meta->num_blocks = num_bytes / BLOCK_SIZE;
+    int rest = num_bytes % BLOCK_SIZE;
+    if(rest > 0) meta->num_blocks++;
 
     printf("Version: %d; Number of blocks: %d\n", meta->version, meta->num_blocks);
 
@@ -34,15 +36,21 @@ int generate_flash_file(int version, int num_blocks) {
     uint8_t digest[CRC_SIZE];
     MD5_Init(&md5_c);
 
-    FILE *file = fopen("bin/flash_file.bin", "wb");
+    FILE *file = fopen("slots/flash_file.bin", "w");
 
     fseek(file, CRC_SIZE+1, SEEK_SET);
     fwrite(&(meta->version), sizeof(uint32_t), 1, file);
     fwrite(&(meta->num_blocks), sizeof(uint16_t), 1, file);
     
     if (file != NULL) {
-        for(int i = 0; i < meta->num_blocks*BLOCK_SIZE; i++) {
+        for(int i = 0; i < num_bytes; i++) {
             uint8_t temp = (uint8_t)rand();
+            MD5_Update(&md5_c, &temp, 1);
+            fwrite(&temp, sizeof(uint8_t), 1, file);
+        }
+
+        for(int i = 0; i < (BLOCK_SIZE - rest); i++) {
+            uint8_t temp = 0;
             MD5_Update(&md5_c, &temp, 1);
             fwrite(&temp, sizeof(uint8_t), 1, file);
         }
