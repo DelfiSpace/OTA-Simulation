@@ -26,19 +26,27 @@ void initSlot(struct Slot* slot, char* file_name) {
 }
 
 bool get_slot_metadata(struct Slot* slot) {
-    FILE* file = fopen(slot->file, "r+");
-    if(file == NULL) return false;
+    const char func_name[] = "get_slot_metadata";
 
+    FILE* file = fopen(slot->file, "r+");
+    if(file == NULL){
+        printf("%s: Can't open slot file!\n", func_name);
+        return false;
+    } 
+    
     fread(&(slot->meta->status), sizeof(uint8_t), 1, file);
     fread(slot->meta->crc, sizeof(uint8_t), CRC_SIZE, file);
     fread(&(slot->meta->version), sizeof(uint32_t), 1, file);
     fread(&(slot->meta->num_blocks), sizeof(uint16_t), 1, file);
 
     fclose(file);
+
     return true;
 }
 
 void print_metadata(struct Slot* slot) {
+    get_slot_metadata(slot);
+
     printf("Metadata of %s:\n", slot->descriptor);
     printf("\tSlot status: ");
     switch (slot->meta->status)
@@ -91,16 +99,31 @@ bool erase(struct Slot* slot) {
     } else if(resp != 'N') {
         printf("Invalid response. Erase canceled\n\n");
     }
+
     fclose(file);
+
+    get_slot_metadata(slot);
     return false;
 }
 
 bool start_update(struct Slot* slot, struct Slot* update) {
-    if(slot == NULL) return false;
-    if(slot->meta->status == FULL) return false;
+    get_slot_metadata(slot);
+
+    const char func_name[] = "start_update";
+    if(slot == NULL) {
+        printf("%s: Slot not initialized!\n", func_name);
+        return false;
+    }
+    if(slot->meta->status == FULL) {
+        printf("%s: Slot is full, erase it first!\n", func_name);
+        return false;
+    }
 
     FILE* file = fopen(slot->file, "w+");
-    if(file == NULL) return false;
+    if(file == NULL){
+        printf("%s: Can't open slot file!\n", func_name);
+        return false;
+    } 
 
     updating_slot = slot;
 
@@ -120,7 +143,8 @@ bool start_update(struct Slot* slot, struct Slot* update) {
 
         fclose(update_file);
     }
-
+    
+    fclose(file);
     state = UPDATE;
     return true;
 }
@@ -147,10 +171,13 @@ bool send_block(uint8_t* block) {
     fwrite(block, sizeof(uint8_t), BLOCK_SIZE, file);
     fgetpos(file, &update_pointer);
     
+    fclose(file);
     return true;
 }
 
 bool check_md5(struct Slot* slot) {
+    get_slot_metadata(slot);
+
     FILE* file = fopen(slot->file, "r+");
     if(file == NULL) return false;
 
@@ -167,7 +194,10 @@ bool check_md5(struct Slot* slot) {
     }
 
     MD5_Final(digest, &md5_c);
-    if(memcmp(digest, slot->meta->crc, CRC_SIZE) != 0) return false;
+    if(memcmp(digest, slot->meta->crc, CRC_SIZE) != 0) {
+        printf("MD5 CRC doesn't match with slot contents.\n");
+        return false;
+    }
     
     rewind(file);
     putc(FULL, file);
