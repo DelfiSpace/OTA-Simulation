@@ -4,7 +4,7 @@
 #ifndef DEF_H_
 #define DEF_H
 
-#define BLOCK_SIZE 64
+#define BLOCK_SIZE 32
 #define CRC_SIZE 16
 #define METADATA_SIZE (CRC_SIZE + 4 + 2)
 
