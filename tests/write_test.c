@@ -19,19 +19,33 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    if(slot0->meta->status == FULL) {
+        erase(slot0);
+    }
+
+    print_metadata(slot0);
+
     uint8_t* block = malloc(sizeof(uint8_t)*BLOCK_SIZE);
     fseek(update_file, METADATA_SIZE+1, SEEK_SET);
 
-    if(!start_update(slot0, update)) printf("Error while starting update!");
+    if(!start_update(slot0, update)) {
+        printf("Error while starting update!\n");
+        return -1;
+    }
     printf("Start Updating...\n");
 
     for(int i = 0; i < update->meta->num_blocks; i++) {
         fread(block, sizeof(uint8_t), BLOCK_SIZE, update_file);
         if(!get_next_block(block)) printf("Block %d: Failed to send block!\n", i);
     }
+    get_slot_metadata(slot0);
+
+    check_md5(slot0);
     stop_update();
+    
     fclose(update_file);
 
+    get_slot_metadata(slot0);
     print_metadata(slot0);
     return 0;
 }
