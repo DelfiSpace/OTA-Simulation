@@ -28,7 +28,7 @@ void initSlot(struct Slot* slot, char* file_name) {
 bool get_slot_metadata(struct Slot* slot) {
     const char func_name[] = "get_slot_metadata";
 
-    FILE* file = fopen(slot->file, "r+");
+    FILE* file = fopen(slot->file, "r");
     if(file == NULL){
         printf("%s: Can't open slot file!\n", func_name);
         return false;
@@ -66,7 +66,7 @@ void print_metadata(struct Slot* slot) {
         default:
             break;
     }
-    printf("\tVersion: %d\n", slot->meta->version);
+    printf("\tVersion: %x\n", slot->meta->version);
     printf("\tNumber of blocks: %d\n", slot->meta->num_blocks);
     printf("\tMD5 CRC: ");
     for(int i = 0; i < CRC_SIZE; i++) {
@@ -198,7 +198,7 @@ bool check_md5(struct Slot* slot) {
         printf("MD5 CRC doesn't match with slot contents.\n");
         return false;
     }
-    
+
     printf("MD5 CRC matches with slot contents.\n");
     
     rewind(file);
@@ -207,6 +207,13 @@ bool check_md5(struct Slot* slot) {
     return true;
 }
 
-bool get_block_crc(uint16_t* crc, uint8_t* block) {
-    return true;
+bool get_block_crc(uint8_t crc, uint8_t* block) {
+    uint8_t val = 0;
+
+	for(int i = 0; i < block + BLOCK_SIZE; i++) {
+		val = CRC_TABLE[val ^ *(block + i)];
+	}
+
+    if(crc == val) return true;
+    return false;
 }
