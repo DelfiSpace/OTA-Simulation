@@ -30,7 +30,7 @@ int generate_flash_file(int version, int num_bytes) {
     int rest = num_bytes % BLOCK_SIZE;
     if(rest > 0) meta->num_blocks++;
 
-    printf("Version: %d; Number of blocks: %d\n", meta->version, meta->num_blocks);
+    printf("Version: %x; Number of blocks: %d\n", meta->version, meta->num_blocks);
 
     MD5_CTX md5_c;
     uint8_t digest[CRC_SIZE];
