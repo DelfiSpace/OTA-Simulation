@@ -143,7 +143,7 @@ bool start_update(struct Slot* slot, struct Slot* update) {
 
         fclose(update_file);
     }
-    
+
     fclose(file);
     state = UPDATE;
     return true;
@@ -198,6 +198,8 @@ bool check_md5(struct Slot* slot) {
         printf("MD5 CRC doesn't match with slot contents.\n");
         return false;
     }
+    
+    printf("MD5 CRC matches with slot contents.\n");
     
     rewind(file);
     putc(FULL, file);

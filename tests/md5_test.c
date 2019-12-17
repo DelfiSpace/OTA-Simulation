@@ -8,10 +8,7 @@ int main(int argc, char* argv[]) {
 
     initSlot(slot0, "slot0.bin");
     print_metadata(slot0);
-    if(check_md5(slot0)) {
-        printf("MD5 CRC matches with slot contents.\n");
-    } else {
-        printf("MD5 CRC doesn't match with slot contents.\n");
-    }
+    check_md5(slot0);
+
     return 0;
 }
