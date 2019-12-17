@@ -133,7 +133,7 @@ bool stop_update() {
 
 bool get_next_block(uint8_t* next_block) {
     if(state != UPDATE) return false;
-    
+    //Do CRC check
     return send_block(next_block);;
 }
 
@@ -151,7 +151,7 @@ bool send_block(uint8_t* block) {
 }
 
 bool check_md5(struct Slot* slot) {
-    FILE* file = fopen(slot->file, "r");
+    FILE* file = fopen(slot->file, "r+");
     if(file == NULL) return false;
 
     uint8_t digest[CRC_SIZE];
@@ -167,8 +167,12 @@ bool check_md5(struct Slot* slot) {
     }
 
     MD5_Final(digest, &md5_c);
-    if(memcmp(digest, slot->meta->crc, CRC_SIZE) == 0) return true;
-    return false;
+    if(memcmp(digest, slot->meta->crc, CRC_SIZE) != 0) return false;
+    
+    rewind(file);
+    putc(FULL, file);
+    fclose(file);
+    return true;
 }
 
 bool get_block_crc(uint16_t* crc, uint8_t* block) {
