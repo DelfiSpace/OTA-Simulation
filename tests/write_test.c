@@ -38,14 +38,12 @@ int main(int argc, char* argv[]) {
         fread(block, sizeof(uint8_t), BLOCK_SIZE, update_file);
         if(!get_next_block(block)) printf("Block %d: Failed to send block!\n", i);
     }
-    get_slot_metadata(slot0);
 
     check_md5(slot0);
     stop_update();
     
     fclose(update_file);
 
-    get_slot_metadata(slot0);
     print_metadata(slot0);
     return 0;
 }
