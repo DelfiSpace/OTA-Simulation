@@ -53,11 +53,9 @@ int generate_flash_file(int version, int num_bytes) {
             uint8_t temp = (uint8_t)rand();
             MD5_Update(&md5_c, &temp, 1);
             fwrite(&temp, sizeof(uint8_t), 1, file);
-            printf("Block %d: wrote 0x%02X\n", index, temp);
 
             if(j == BLOCK_SIZE) {
                 *(par_crcs + index) = val;
-                printf("Block %d: crc is 0x%02X\n", index, val);
                 index++;
                 j = 0;
                 val = 0;
@@ -74,7 +72,6 @@ int generate_flash_file(int version, int num_bytes) {
             }
         }
     	*(par_crcs + index) = val;
-        printf("Block %d: crc is 0x%02X\n", index, val);
 
         MD5_Final(digest, &md5_c);
 
