@@ -11,7 +11,7 @@ endif
 
 
 $(TARGET): $(TARGET).c
-	gcc -o ./bin/$(BIN) $(TARGET).c generate.c OTA.c $(CFLAGS) 
+	gcc -o ./bin/$(BIN) $(TARGET).c update_file.c OTA.c $(CFLAGS) 
 
 clean:
 	$(RM) ./bin/$(test)
