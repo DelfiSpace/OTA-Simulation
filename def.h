@@ -7,7 +7,9 @@
 #define FRAM_SIZE 32768
 #define BLOCK_SIZE 32
 #define CRC_SIZE 16
-#define METADATA_SIZE (CRC_SIZE + 4 + 2)
+#define SLOT_SIZE 131072
+#define PAR_CRC_SIZE (SLOT_SIZE / BLOCK_SIZE)
+#define METADATA_SIZE (CRC_SIZE + 4 + 2 + PAR_CRC_SIZE) 
 
 static const uint8_t CRC_TABLE[256] = { //CRC8-CCITT table, polynomial x^8+x^2+x+1
     0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15,
@@ -67,12 +69,12 @@ struct Metadata
     uint32_t version;
     uint16_t num_blocks;
     uint8_t crc[CRC_SIZE];
-    uint8_t* partial_crcs;
 };
 
 struct Slot {
     char* file;
     struct Metadata* meta;
     char* descriptor;
+    uint8_t number;
 };
 #endif // DEF_H
