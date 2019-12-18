@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #ifndef DEF_H_
-#define DEF_H
+#define DEF_H_
 
 #define FRAM_SIZE 32768
 #define BLOCK_SIZE 32
