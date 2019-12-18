@@ -4,7 +4,7 @@
 #ifndef OTA_H_
 #define OTA_H_
 
-void initSlot(struct Slot* slot, char* file_name);
+void initSlot(struct Slot* slot, char* file_name, uint8_t slot_number);
 bool set_boot_slot(struct Slot* slot, bool always);
 bool get_slot_metadata(struct Slot* slot);
 void print_metadata(struct Slot* slot);

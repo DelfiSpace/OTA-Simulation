@@ -13,13 +13,15 @@ struct Slot* current_slot;
 struct Slot* updating_slot;
 fpos_t update_pointer;
 
-void initSlot(struct Slot* slot, char* file_name) {
+void initSlot(struct Slot* slot, char* file_name, uint8_t slot_number) {
     slot->file = malloc(sizeof(char)*(strlen(file_name) + 20));
 
     strcpy(slot->file, "./slots/");
     strcat(slot->file, file_name);
 
     slot->descriptor = file_name;
+
+    slot->number = slot_number;
 
     slot->meta = malloc(sizeof(struct Metadata));
     get_slot_metadata(slot);
@@ -28,11 +30,18 @@ void initSlot(struct Slot* slot, char* file_name) {
 bool get_slot_metadata(struct Slot* slot) {
     const char func_name[] = "get_slot_metadata";
 
-    FILE* file = fopen(slot->file, "r");
+    FILE* file = fopen("./slots/fram.bin", "r");
     if(file == NULL){
-        printf("%s: Can't open slot file!\n", func_name);
+        printf("%s: Can't open fram file!\n", func_name);
         return false;
     } 
+
+    if(slot->number < 1 || slot->number > 2) {
+        printf("%s: Slot is out of range shoud be > 0 or < 2! Slot number is %d.\n", func_name, slot->number);
+        return false;
+    }
+
+    fseek(file, METADATA_SIZE * (slot->number - 1), SEEK_SET);
     
     fread(&(slot->meta->status), sizeof(uint8_t), 1, file);
     fread(slot->meta->crc, sizeof(uint8_t), CRC_SIZE, file);
@@ -84,15 +93,23 @@ bool set_boot_slot(struct Slot* slot, bool always) {
 }
 
 bool erase(struct Slot* slot) {
-    FILE* file = fopen(slot->file, "r+");
+    const char func_name[] = "erase";
+
+    FILE* file = fopen("slots/fram.bin", "r+");
     if(file == NULL) return false;
+    if(slot->number < 1 || slot->number > 2) {
+        printf("%s: Slot is out of range shoud be > 0 or < 2! Slot number is %d.\n", func_name, slot->number);
+        return false;
+    }
+
+    fseek(file, METADATA_SIZE * (slot->number - 1), SEEK_SET);
 
     printf("Are you sure you want to erase this slot? (Y/N): ");
     char resp = toupper(getchar());
 
     if(resp == 'Y') {
         printf("Erasing %s\n\n", slot->descriptor);
-        for(int i = 0; i <= METADATA_SIZE; i++) {
+        for(int i = 0; i <= METADATA_SIZE - PAR_CRC_SIZE; i++) {
             putc(0, file);
         }
         return true;
@@ -119,15 +136,22 @@ bool start_update(struct Slot* slot, struct Slot* update) {
         return false;
     }
 
-    FILE* file = fopen(slot->file, "w+");
+    FILE* file = fopen("slots/fram.bin", "r+");
     if(file == NULL){
         printf("%s: Can't open slot file!\n", func_name);
         return false;
     } 
 
+    if(slot->number < 1 || slot->number > 2) {
+        printf("%s: Slot is out of range shoud be > 0 or < 2! Slot number is %d.\n", func_name, slot->number);
+        return false;
+    }
+
+    fseek(file, METADATA_SIZE * (slot->number - 1), SEEK_SET);
+
     updating_slot = slot;
 
-    FILE* update_file = fopen(update->file, "r+");
+    FILE* update_file = fopen(update->file, "r");
 
     if(update_file != NULL) {
         slot->meta->status = PARTIAL;
@@ -185,8 +209,6 @@ bool check_md5(struct Slot* slot) {
     MD5_CTX md5_c;
     uint8_t* block = malloc(sizeof(uint8_t)*BLOCK_SIZE);
 
-    fseek(file, METADATA_SIZE+1, SEEK_SET);
-
     MD5_Init(&md5_c);
     for(int i = 0; i < slot->meta->num_blocks; i++) {
         fread(block, sizeof(uint8_t), BLOCK_SIZE, file);
@@ -201,7 +223,7 @@ bool check_md5(struct Slot* slot) {
 
     printf("MD5 CRC matches with slot contents.\n");
     
-    rewind(file);
+    fclose(file);
     putc(FULL, file);
     fclose(file);
     return true;
