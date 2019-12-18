@@ -2,13 +2,14 @@
 #include <stdlib.h>
 
 #include "../OTA.h"
+#include "../update_file.h"
 
 int main(int argc, char* argv[]) {
     struct Slot* update = malloc(sizeof(struct Slot));;
-    struct Slot* slot0 = malloc(sizeof(struct Slot));;
+    struct Slot* slot1 = malloc(sizeof(struct Slot));;
 
-    initSlot(update, "flash_file.bin");
-    initSlot(slot0, "slot0.bin");    
+    initUpdate(update, "flash_file.bin");
+    initSlot(slot1, "slot1.bin", 1);    
 
     print_metadata(update);
 
@@ -19,16 +20,18 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    if(slot0->meta->status == FULL) {
-        erase(slot0);
+    if(slot1->meta->status == FULL) {
+        erase(slot1);
     }
 
-    print_metadata(slot0);
+    print_metadata(slot1);
 
     uint8_t* block = malloc(sizeof(uint8_t)*BLOCK_SIZE);
+    uint8_t* par_crcs = fetch_partial_crcs(update);
+    
     fseek(update_file, METADATA_SIZE+1, SEEK_SET);
 
-    if(!start_update(slot0, update)) {
+    if(!start_update(slot1, update)) {
         printf("Error while starting update!\n");
         return -1;
     }
@@ -39,11 +42,11 @@ int main(int argc, char* argv[]) {
         if(!get_next_block(block)) printf("Block %d: Failed to send block!\n", i);
     }
 
-    check_md5(slot0);
+    check_md5(slot1);
     stop_update();
     
     fclose(update_file);
 
-    print_metadata(slot0);
+    print_metadata(slot1);
     return 0;
 }

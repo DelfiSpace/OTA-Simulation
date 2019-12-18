@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < update->meta->num_blocks; i++) {
         fread(block, sizeof(uint8_t), BLOCK_SIZE, update_file);
         uint32_t rn = (uint32_t)rand();
-        if(rn > ((0xffffffff / 10) * 9)) {
+        if(rn > ((UINT32_MAX / 10) * 5)) {
             *(block + (rn % BLOCK_SIZE)) = (uint8_t)rand();
             printf("Corrupt value induced!\n");
         }
