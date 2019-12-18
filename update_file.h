@@ -8,5 +8,6 @@
 int generate_flash_file(int version, int num_blocks);
 void initUpdate(struct Slot* slot, char* file_name);
 bool get_update_metadata(struct Slot* slot);
+uint8_t* fetch_partial_crcs(struct Slot* slot);
 
 #endif
