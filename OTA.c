@@ -157,8 +157,8 @@ bool stop_update() {
 
 bool get_next_block(uint8_t* next_block) {
     if(state != UPDATE) return false;
-    //Do CRC check
-    return send_block(next_block);;
+    get_block_crc(next_block);
+    return send_block(next_block);
 }
 
 bool send_block(uint8_t* block) {
@@ -207,13 +207,12 @@ bool check_md5(struct Slot* slot) {
     return true;
 }
 
-bool get_block_crc(uint8_t crc, uint8_t* block) {
+uint8_t get_block_crc(uint8_t* block) {
     uint8_t val = 0;
 
-	for(int i = 0; i < block + BLOCK_SIZE; i++) {
+	for(int i = 0; i < BLOCK_SIZE; i++) {
 		val = CRC_TABLE[val ^ *(block + i)];
 	}
 
-    if(crc == val) return true;
-    return false;
+    return val;
 }
