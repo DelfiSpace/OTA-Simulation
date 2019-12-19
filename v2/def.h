@@ -28,6 +28,16 @@ enum update_status{
     UPDATE    
 } state;
 
+enum commands{
+    START_OTA,
+    RECEIVE_METADATA,
+    SEND_METADATA,
+    RECEIVE_PARTIAL_CRCS,
+    RECEIVE_BLOCK,
+    CHECK_MD5,
+    STOP_OTA
+};
+
 struct Metadata
 {
     enum slot_status status;

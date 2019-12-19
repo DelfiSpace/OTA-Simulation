@@ -7,7 +7,7 @@
 
 #include <openssl/md5.h>
 
-#include "OTA_v2.h"
+#include "OTA.h"
 
 void start_OTA();
 void receive_metadata(uint8_t* metadata, uint8_t size);
@@ -29,31 +29,25 @@ void command_handler(uint8_t* command) {
 
     switch (cmd)
     {
-    case 0x00:
+    case START_OTA:
         start_OTA();
         break;
-    case 0x01:
+    case RECEIVE_METADATA:
         receive_metadata(data, size);
         break;
-    case 0x02:
+    case SEND_METADATA:
         send_metadata();
         break;
-    case 0x03:
+    case RECEIVE_PARTIAL_CRCS:
         receive_partial_crcs();
         break;
-    case 0x04:
+    case RECEIVE_BLOCK:
         receive_block();
         break;
-    case 0x05:
-        check_partial_crc();
-        break;
-    case 0x06:
+    case CHECK_MD5:
         check_md5();
         break;
-    case 0x07:
-        write_to_flash();
-        break;
-    case 0x08:
+    case STOP_OTA:
         stop_OTA();
         break;
     default:
