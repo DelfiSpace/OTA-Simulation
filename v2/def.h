@@ -11,8 +11,8 @@
 #define PAR_CRC_SIZE (SLOT_SIZE / BLOCK_SIZE)
 #define METADATA_SIZE (CRC_SIZE + 4 + 2) 
 
-const char* slot_files[2] = {"slots/slot1.bin", "slots/slot2.bin"};
-const char* fram_file = "slots/fram.bin";
+static const char* slot_files[2] = {"slots/slot1.bin", "slots/slot2.bin"};
+static const char* fram_file = "slots/fram.bin";
 
 enum flags {
     ERASE_FLAG = 0x01,
