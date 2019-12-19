@@ -10,7 +10,7 @@
 #include "OTA_v2.h"
 
 void start_OTA();
-void receive_metadata();
+void receive_metadata(uint8_t* metadata, uint8_t size);
 void send_metadata();
 void receive_partial_crcs();
 void receive_block();
@@ -19,14 +19,21 @@ void check_md5();
 void write_to_flash();
 void stop_OTA();
 
-void command_handler(uint8_t command) {
-    switch (command)
+/*
+    Command pattern: CMD - SIZE - DATA(32 bytes)
+*/
+void command_handler(uint8_t* command) {
+    uint8_t cmd = *command;
+    uint8_t size = *(command + 1);
+    uint8_t* data = command + 2;
+
+    switch (cmd)
     {
     case 0x00:
         start_OTA();
         break;
     case 0x01:
-        receive_metadata();
+        receive_metadata(data, size);
         break;
     case 0x02:
         send_metadata();
