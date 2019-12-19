@@ -11,6 +11,9 @@
 #define PAR_CRC_SIZE (SLOT_SIZE / BLOCK_SIZE)
 #define METADATA_SIZE (CRC_SIZE + 4 + 2) 
 
+const char* slot_files[2] = {"slots/slot1.bin", "slots/slot2.bin"};
+const char* fram_file = "slots/fram.bin";
+
 enum flags {
     ERASE_FLAG = 0x01,
     UPDATE_FLAG = 0x02
@@ -47,9 +50,7 @@ struct Metadata
 };
 
 struct Slot {
-    char* file;
     struct Metadata* meta;
-    char* descriptor;
     uint8_t number;
 };
 
