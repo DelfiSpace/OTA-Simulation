@@ -11,7 +11,7 @@ endif
 
 
 $(TARGET): $(TARGET).c
-	gcc -o ./bin/$(BIN) $(TARGET).c $(CFLAGS) 
+	gcc -o ./bin/$(BIN) $(TARGET).c slot_handler.c $(CFLAGS) 
 
 clean:
 	$(RM) ./bin/$(test)

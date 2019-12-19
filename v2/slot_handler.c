@@ -16,7 +16,7 @@ fpos_t update_pointer;
 void initSlot(struct Slot* slot, uint8_t slot_number) {
     const char* func_name = "get_slot_metadata";
 
-    if(slot->number == 1 || slot->number == 2) {
+    if(slot_number == 1 || slot_number == 2) {
         slot->number = slot_number;
 
         slot->meta = malloc(sizeof(struct Metadata));
@@ -52,36 +52,36 @@ void get_slot_metadata(struct Slot* slot) {
     return;
 }
 
-// void print_metadata(struct Slot* slot) {
-//     get_slot_metadata(slot);
+void print_metadata(struct Slot* slot) {
+    get_slot_metadata(slot);
 
-//     printf("Metadata of %s:\n", slot->descriptor);
-//     printf("\tSlot status: ");
-//     switch (slot->meta->status)
-//     {
-//         case EMPTY:
-//             printf("Emtpy\n");
-//             break;
-//         case PARTIAL:
-//             printf("Partial\n");
-//             break;
-//         case FULL:
-//             printf("Full\n");
-//             break;
-//         case TRANSMISSION:
-//             printf("Transmission\n");
-//             break;
-//         default:
-//             break;
-//     }
-//     printf("\tVersion: %x\n", slot->meta->version);
-//     printf("\tNumber of blocks: %d\n", slot->meta->num_blocks);
-//     printf("\tMD5 CRC: ");
-//     for(int i = 0; i < CRC_SIZE; i++) {
-//         printf("%x", slot->meta->crc[i]);
-//     }
-//     printf("\n");
-// }
+    printf("Metadata:\n");
+    printf("\tSlot status: ");
+    switch (slot->meta->status)
+    {
+        case EMPTY:
+            printf("Emtpy\n");
+            break;
+        case PARTIAL:
+            printf("Partial\n");
+            break;
+        case FULL:
+            printf("Full\n");
+            break;
+        case TRANSMISSION:
+            printf("Transmission\n");
+            break;
+        default:
+            break;
+    }
+    printf("\tVersion: %x\n", slot->meta->version);
+    printf("\tNumber of blocks: %d\n", slot->meta->num_blocks);
+    printf("\tMD5 CRC: ");
+    for(int i = 0; i < CRC_SIZE; i++) {
+        printf("%x", slot->meta->crc[i]);
+    }
+    printf("\n");
+}
 
 // bool set_boot_slot(struct Slot* slot, bool always) {
 //     if(slot == NULL) return false;
