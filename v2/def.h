@@ -9,7 +9,7 @@
 #define CRC_SIZE 16
 #define SLOT_SIZE 131072
 #define PAR_CRC_SIZE (SLOT_SIZE / BLOCK_SIZE)
-#define METADATA_SIZE (CRC_SIZE + 4 + 2) 
+#define METADATA_SIZE (CRC_SIZE + 4 + 2 + 1) 
 
 static const char* slot_files[2] = {"slots/slot1.bin", "slots/slot2.bin"};
 static const char* fram_file = "slots/fram.bin";
@@ -35,23 +35,18 @@ enum commands{
     START_OTA,
     RECEIVE_METADATA,
     SEND_METADATA,
-    RECEIVE_PARTIAL_CRCS,
-    RECEIVE_BLOCK,
+    SEND_PARTIAL_CRCS,
+    SEND_BLOCK,
     CHECK_MD5,
     STOP_OTA
 };
 
 struct Metadata
 {
-    enum slot_status status;
+    uint8_t status;
     uint32_t version;
     uint16_t num_blocks;
     uint8_t crc[CRC_SIZE];
-};
-
-struct Slot {
-    struct Metadata* meta;
-    uint8_t number;
 };
 
 static const uint8_t CRC_TABLE[256] = { //CRC8-CCITT table, polynomial x^8+x^2+x+1

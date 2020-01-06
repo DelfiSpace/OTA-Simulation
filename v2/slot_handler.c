@@ -9,78 +9,40 @@
 
 #include "slot_handler.h"
 
-struct Slot* current_slot;
+#define NUM_SLOTS 2
+
 struct Slot* updating_slot;
 fpos_t update_pointer;
 
-void initSlot(struct Slot* slot, uint8_t slot_number) {
+struct Metadata* get_slot_metadata(uint8_t slot_number) {
     const char* func_name = "get_slot_metadata";
 
-    if(slot_number == 1 || slot_number == 2) {
-        slot->number = slot_number;
+    uint8_t slot_index = slot_number - 1;
 
-        slot->meta = malloc(sizeof(struct Metadata));
-        get_slot_metadata(slot);
-    } else {
-        printf("%s: Slot number is out of range. Slot number can only be 1 or 2.\n", func_name);
-    }
-}
-
-void get_slot_metadata(struct Slot* slot) {
-    const char* func_name = "get_slot_metadata";
-
-    FILE* file = fopen(fram_file, "r");
-    if(file == NULL){
-        printf("%s: Can't access FRAM!\n", func_name);
-        return;
+    if(slot_index >= NUM_SLOTS) {
+        printf("%s: Slot number out of range! Index is %d\n", func_name, slot_index);
+        return NULL;
     } 
 
-    if(slot->meta == NULL) {
-        printf("%s: Slot is not initialized.\n", func_name);
-        return;
+    FILE* file = fopen(fram_file, "r");
+    if(file == NULL) {
+        printf("%s: Can't access FRAM!\n", func_name);
+        return NULL;
     }
 
-    fseek(file, (METADATA_SIZE + PAR_CRC_SIZE) * (slot->number - 1), SEEK_SET);
+    fseek(file, (METADATA_SIZE + PAR_CRC_SIZE) * slot_index, SEEK_SET);
+    printf("Offset for slot %d: %02X\n", slot_number, (METADATA_SIZE + PAR_CRC_SIZE) * slot_index);
     
-    fread(&(slot->meta->status), sizeof(uint8_t), 1, file);
-    fread(slot->meta->crc, sizeof(uint8_t), CRC_SIZE, file);
-    fread(&(slot->meta->version), sizeof(uint32_t), 1, file);
-    fread(&(slot->meta->num_blocks), sizeof(uint16_t), 1, file);
+    struct Metadata* retMet = malloc(sizeof(struct Metadata));
+
+    fread(&(retMet->status), sizeof(uint8_t), 1, file);
+    fread(retMet->crc, sizeof(uint8_t), CRC_SIZE, file);
+    fread(&(retMet->version), sizeof(uint32_t), 1, file);
+    fread(&(retMet->num_blocks), sizeof(uint16_t), 1, file);
 
     fclose(file);
-
-    return;
-}
-
-void print_metadata(struct Slot* slot) {
-    get_slot_metadata(slot);
-
-    printf("Metadata:\n");
-    printf("\tSlot status: ");
-    switch (slot->meta->status)
-    {
-        case EMPTY:
-            printf("Emtpy\n");
-            break;
-        case PARTIAL:
-            printf("Partial\n");
-            break;
-        case FULL:
-            printf("Full\n");
-            break;
-        case TRANSMISSION:
-            printf("Transmission\n");
-            break;
-        default:
-            break;
-    }
-    printf("\tVersion: %x\n", slot->meta->version);
-    printf("\tNumber of blocks: %d\n", slot->meta->num_blocks);
-    printf("\tMD5 CRC: ");
-    for(int i = 0; i < CRC_SIZE; i++) {
-        printf("%x", slot->meta->crc[i]);
-    }
-    printf("\n");
+    
+    return retMet;
 }
 
 // bool set_boot_slot(struct Slot* slot, bool always) {

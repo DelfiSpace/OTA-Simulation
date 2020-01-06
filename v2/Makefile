@@ -10,8 +10,8 @@ else
 endif
 
 
-$(TARGET): $(TARGET).c
-	gcc -o ./bin/$(BIN) $(TARGET).c slot_handler.c $(CFLAGS) 
+$(TARGET): $(TARGET).c def.h
+	gcc -o ./bin/$(BIN) $(TARGET).c OTA.c slot_handler.c $(CFLAGS) 
 
 clean:
 	$(RM) ./bin/$(test)

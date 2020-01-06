@@ -5,10 +5,9 @@
 #ifndef SLOT_HANDLER_H_
 #define SLOT_HANDLER_H_
 
-void initSlot(struct Slot* slot, uint8_t slot_number);
 //bool set_boot_slot(struct Slot* slot, bool always);
-void get_slot_metadata(struct Slot* slot);
-void print_metadata(struct Slot* slot);
+struct Metadata* get_slot_metadata(uint8_t slot_number);
+void print_metadata(uint8_t slot_number);
 // bool erase(struct Slot* slot);
 
 // bool start_update(struct Slot* slot, struct Slot* update);
