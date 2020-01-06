@@ -47,7 +47,7 @@ uint8_t* command_handler(uint8_t* command) {
         receive_block();
         break;
     case CHECK_MD5:
-        if(size == 1) check_md5(data);
+        if(size == 1) return check_md5(*data);
         break;
     case STOP_OTA:
         stop_OTA();
@@ -89,9 +89,18 @@ void check_partial_crc() {
 }
 
 uint8_t* check_md5(uint8_t slot_number) {
-    MD5_CTX md5_c;
-    MD5_Init(&md5_c);
     
+
+    uint16_t num_blocks;
+    fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * (slot_number - 1) + METADATA_SIZE - sizeof(uint16_t), (uint8_t*)&num_blocks, sizeof(uint16_t));
+    uint8_t meta_crc[CRC_SIZE];
+    fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * (slot_number - 1) + sizeof(uint8_t), meta_crc, CRC_SIZE);
+
+    uint8_t* data = malloc(sizeof(uint16_t) + 2);
+    *data = CHECK_MD5;
+    *(data + 1) = sizeof(uint16_t);
+    memcpy(data + 2, &num_blocks, sizeof(uint16_t));
+    return data;
 }
 
 void write_to_flash() {

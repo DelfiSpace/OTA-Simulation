@@ -11,7 +11,7 @@ struct Slot* updating_slot;
 fpos_t update_pointer;
 
 void fram_write_bytes(uint32_t address, uint8_t* data, uint16_t len) {
-    const char* func_name = "write_bytes";
+    const char* func_name = "fram_write_bytes";
 
     FILE* file = fopen(fram_file, "r+");
     if(file == NULL) {
@@ -26,9 +26,39 @@ void fram_write_bytes(uint32_t address, uint8_t* data, uint16_t len) {
 }
 
 void fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len) {
-    const char* func_name = "read_bytes";
+    const char* func_name = "fram_read_bytes";
 
     FILE* file = fopen(fram_file, "r");
+    if(file == NULL) {
+        printf("%s: Can't access FRAM!\n", func_name);
+        return;
+    }
+
+    fseek(file, address, SEEK_SET);
+    fread(data, sizeof(uint8_t), len, file);
+
+    fclose(file);
+}
+
+void slot_write_bytes(uint32_t address, uint8_t* data, uint16_t len) {
+    const char* func_name = "slot_write_bytes";
+
+    FILE* file = fopen(fram_file, "r+");
+    if(file == NULL) {
+        printf("%s: Can't access FRAM!\n", func_name);
+        return;
+    }
+
+    fseek(file, address, SEEK_SET);
+    fwrite(data, sizeof(uint8_t), len, file);
+
+    fclose(file);
+}
+
+void slot_read_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len) {
+    const char* func_name = "slot_read_bytes";
+
+    FILE* file = fopen(slot_files[slot], "r");
     if(file == NULL) {
         printf("%s: Can't access FRAM!\n", func_name);
         return;
