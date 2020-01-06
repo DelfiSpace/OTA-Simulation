@@ -11,7 +11,7 @@ endif
 
 
 $(TARGET): $(TARGET).c def.h
-	gcc -o ./bin/$(BIN) $(TARGET).c OTA.c slot_handler.c $(CFLAGS) 
+	gcc -o ./bin/$(BIN) $(TARGET).c OTA.c slot_handler.c md5.c $(CFLAGS) 
 
 clean:
 	$(RM) ./bin/$(test)
