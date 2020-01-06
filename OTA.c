@@ -5,7 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <openssl/md5.h>
+#include "md5.h"
 
 #include "OTA.h"
 #include "slot_handler.h"
@@ -16,7 +16,7 @@ uint8_t* send_metadata(uint8_t slot_number);
 void receive_partial_crcs();
 void receive_block();
 void check_partial_crc();
-void check_md5();
+uint8_t* check_md5(uint8_t slot_number);
 void write_to_flash();
 void stop_OTA();
 
@@ -47,7 +47,7 @@ uint8_t* command_handler(uint8_t* command) {
         receive_block();
         break;
     case CHECK_MD5:
-        check_md5();
+        if(size == 1) check_md5(data);
         break;
     case STOP_OTA:
         stop_OTA();
@@ -68,25 +68,11 @@ void receive_metadata(uint8_t* metadata, uint8_t size) {
 }
 
 uint8_t* send_metadata(uint8_t slot_number) {
-    struct Metadata* meta = get_slot_metadata(slot_number);
-    
     uint8_t* data = malloc(METADATA_SIZE + 2);
     *data = RECEIVE_METADATA;
     *(data + 1) = METADATA_SIZE;
-    uint8_t* wr_pointer = data + 2;
 
-    *wr_pointer = meta->status;
-    wr_pointer += sizeof(uint8_t);
-
-    memcpy(wr_pointer, &(meta->version), sizeof(uint32_t));
-    wr_pointer += sizeof(uint32_t);
-
-    memcpy(wr_pointer, &(meta->num_blocks), sizeof(uint16_t));
-    wr_pointer += sizeof(uint16_t);
-
-    memcpy(wr_pointer, meta->crc, CRC_SIZE);
-
-    free(meta);
+    fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * (slot_number - 1), data + 2, METADATA_SIZE);
     return data;
 }
 
@@ -102,8 +88,10 @@ void check_partial_crc() {
 
 }
 
-void check_md5() {
-
+uint8_t* check_md5(uint8_t slot_number) {
+    MD5_CTX md5_c;
+    MD5_Init(&md5_c);
+    
 }
 
 void write_to_flash() {

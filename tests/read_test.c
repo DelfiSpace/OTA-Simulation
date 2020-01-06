@@ -24,10 +24,10 @@ void print_metadata(uint8_t* metadata) {
             printf("Unknown slot status %d!\n", metadata[0]);
             break;
     }
-    printf("\tVersion: %02x%02x%02x%02x\n", metadata[1], metadata[2], metadata[3], metadata[4]);
-    printf("\tNumber of blocks: %d\n", metadata[6] << 8 | metadata[5]);
+    printf("\tVersion: %02x%02x%02x%02x\n", metadata[CRC_SIZE+1], metadata[CRC_SIZE+2], metadata[CRC_SIZE+3], metadata[CRC_SIZE+4]);
+    printf("\tNumber of blocks: %d\n", metadata[CRC_SIZE+6] << 8 | metadata[CRC_SIZE+5]);
     printf("\tMD5 CRC: ");
-    for(int i = 7; i < CRC_SIZE; i++) {
+    for(int i = 1; i < CRC_SIZE; i++) {
         printf("%02X", metadata[i]);
     }
     printf("\n");

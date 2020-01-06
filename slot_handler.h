@@ -8,6 +8,10 @@
 //bool set_boot_slot(struct Slot* slot, bool always);
 struct Metadata* get_slot_metadata(uint8_t slot_number);
 void print_metadata(uint8_t slot_number);
+
+void fram_write_bytes(uint32_t address, uint8_t* data, uint16_t len);
+void fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len);
+
 // bool erase(struct Slot* slot);
 
 // bool start_update(struct Slot* slot, struct Slot* update);

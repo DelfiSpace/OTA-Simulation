@@ -5,14 +5,41 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <openssl/md5.h>
-
 #include "slot_handler.h"
 
 #define NUM_SLOTS 2
 
 struct Slot* updating_slot;
 fpos_t update_pointer;
+
+void fram_write_bytes(uint32_t address, uint8_t* data, uint16_t len) {
+    const char* func_name = "write_bytes";
+
+    FILE* file = fopen(fram_file, "r+");
+    if(file == NULL) {
+        printf("%s: Can't access FRAM!\n", func_name);
+        return;
+    }
+
+    fseek(file, address, SEEK_SET);
+    fwrite(data, sizeof(uint8_t), len, file);
+
+    fclose(file);
+}
+void fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len) {
+    const char* func_name = "read_bytes";
+
+    FILE* file = fopen(fram_file, "r");
+    if(file == NULL) {
+        printf("%s: Can't access FRAM!\n", func_name);
+        return;
+    }
+
+    fseek(file, address, SEEK_SET);
+    fread(data, sizeof(uint8_t), len, file);
+
+    fclose(file);
+}
 
 struct Metadata* get_slot_metadata(uint8_t slot_number) {
     const char* func_name = "get_slot_metadata";
