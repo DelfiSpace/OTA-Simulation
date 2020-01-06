@@ -35,7 +35,7 @@ void print_metadata(uint8_t* metadata) {
 
 
 int main(int argc, char* argv[]) {
-    uint8_t command[] = {RECEIVE_METADATA, 1, 2};
+    uint8_t command[] = {RECEIVE_METADATA, 1, 1};
     uint8_t* response = command_handler(command);
 
     printf("Data size: %d\n", *(response + 1));

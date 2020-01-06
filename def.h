@@ -8,6 +8,7 @@
 #define BLOCK_SIZE 32
 #define CRC_SIZE 16
 #define SLOT_SIZE 131072
+#define NUM_SLOTS 2
 #define PAR_CRC_SIZE (SLOT_SIZE / BLOCK_SIZE)
 #define METADATA_SIZE (CRC_SIZE + 4 + 2 + 1) 
 

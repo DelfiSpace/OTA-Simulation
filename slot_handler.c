@@ -7,8 +7,6 @@
 
 #include "slot_handler.h"
 
-#define NUM_SLOTS 2
-
 struct Slot* updating_slot;
 fpos_t update_pointer;
 
@@ -26,6 +24,7 @@ void fram_write_bytes(uint32_t address, uint8_t* data, uint16_t len) {
 
     fclose(file);
 }
+
 void fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len) {
     const char* func_name = "read_bytes";
 
@@ -39,37 +38,6 @@ void fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len) {
     fread(data, sizeof(uint8_t), len, file);
 
     fclose(file);
-}
-
-struct Metadata* get_slot_metadata(uint8_t slot_number) {
-    const char* func_name = "get_slot_metadata";
-
-    uint8_t slot_index = slot_number - 1;
-
-    if(slot_index >= NUM_SLOTS) {
-        printf("%s: Slot number out of range! Index is %d\n", func_name, slot_index);
-        return NULL;
-    } 
-
-    FILE* file = fopen(fram_file, "r");
-    if(file == NULL) {
-        printf("%s: Can't access FRAM!\n", func_name);
-        return NULL;
-    }
-
-    fseek(file, (METADATA_SIZE + PAR_CRC_SIZE) * slot_index, SEEK_SET);
-    printf("Offset for slot %d: %02X\n", slot_number, (METADATA_SIZE + PAR_CRC_SIZE) * slot_index);
-    
-    struct Metadata* retMet = malloc(sizeof(struct Metadata));
-
-    fread(&(retMet->status), sizeof(uint8_t), 1, file);
-    fread(retMet->crc, sizeof(uint8_t), CRC_SIZE, file);
-    fread(&(retMet->version), sizeof(uint32_t), 1, file);
-    fread(&(retMet->num_blocks), sizeof(uint16_t), 1, file);
-
-    fclose(file);
-    
-    return retMet;
 }
 
 // bool set_boot_slot(struct Slot* slot, bool always) {
