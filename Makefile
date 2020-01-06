@@ -5,8 +5,6 @@ BIN = $(test)
 
 ifeq ($(OS),Windows_NT)
 	BIN = $(test).exe
-else
-	CFLAGS += -lcrypto
 endif
 
 

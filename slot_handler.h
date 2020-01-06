@@ -10,6 +10,9 @@
 void fram_write_bytes(uint32_t address, uint8_t* data, uint16_t len);
 void fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len);
 
+void slot_write_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len);
+void slot_read_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len);
+
 // bool erase(struct Slot* slot);
 
 // bool start_update(struct Slot* slot, struct Slot* update);

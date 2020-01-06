@@ -40,12 +40,12 @@ void fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len) {
     fclose(file);
 }
 
-void slot_write_bytes(uint32_t address, uint8_t* data, uint16_t len) {
+void slot_write_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len) {
     const char* func_name = "slot_write_bytes";
 
     FILE* file = fopen(fram_file, "r+");
     if(file == NULL) {
-        printf("%s: Can't access FRAM!\n", func_name);
+        printf("%s: Can't access slot %d!\n", func_name, slot);
         return;
     }
 
@@ -60,7 +60,7 @@ void slot_read_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len
 
     FILE* file = fopen(slot_files[slot], "r");
     if(file == NULL) {
-        printf("%s: Can't access FRAM!\n", func_name);
+        printf("%s: Can't access slot %d!\n", func_name, slot);
         return;
     }
 
