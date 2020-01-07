@@ -17,8 +17,27 @@
 #define VERSION_OFFSET (CRC_OFFSET + CRC_SIZE)
 #define NUM_BLOCKS_OFFSET (VERSION_OFFSET + 4)
 
+#define MAX_COMMAND_SIZE 256
+
 static const char* slot_files[2] = {"slots/slot1.bin", "slots/slot2.bin"};
 static const char* fram_file = "slots/fram.bin";
+
+enum bus_offsets {
+    COMMAND_DESTINATION,
+    COMMAND_SIZE,
+    COMMAND_SOURCE,
+    COMMAND_STATE,
+    COMMAND_SERVICE,
+    COMMAND_METHOD,
+    COMMAND_PARAMETER_SIZE,
+    COMMAND_PARAMETER
+};
+
+enum command_states {
+    COMMAND_ERROR,
+    COMMAND_REQUEST,
+    COMMAND_REPLY
+};
 
 enum flags {
     ERASE_FLAG = 0x01,

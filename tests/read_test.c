@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "../OTA.h"
+#include "../def.h"
 
 void print_metadata(uint8_t* metadata) {
     printf("Metadata:\n");
@@ -35,10 +36,18 @@ void print_metadata(uint8_t* metadata) {
 
 
 int main(int argc, char* argv[]) {
-    uint8_t command[] = {RECEIVE_METADATA, 1, 1};
+    uint8_t command[256] = {0};
+    command[COMMAND_DESTINATION] = 18;
+    command[COMMAND_SIZE] = 5;
+    command[COMMAND_STATE] = COMMAND_REQUEST;
+    command[COMMAND_METHOD] = RECEIVE_METADATA;
+    command[COMMAND_PARAMETER] = 2;
+    command[COMMAND_PARAMETER_SIZE] = 1;
+
     uint8_t* response = command_handler(command);
 
-    print_metadata(response + 2);
+    print_metadata(&response[COMMAND_PARAMETER]);
 
+    free(response);
     return 0;
 }
