@@ -9,10 +9,13 @@ enum error_codes{
     NO_SLOT_ACCESS,
     SLOT_OUT_OF_RANGE,
     MEMORY_FULL,
-    PARAMETER_OVERLOAD
+    PARAMETER_OVERLOAD,
+    UPDATE_NOT_STARTED,
+    UPDATE_ALREADY_STARTED
 };
 
-uint8_t* error_handler(uint8_t* data, enum error_codes error);
+uint8_t* throw_error(uint8_t* data, enum error_codes error);
 void set_error(uint8_t* data, enum error_codes error);
+void print_error(enum error_codes error);
 
 #endif
