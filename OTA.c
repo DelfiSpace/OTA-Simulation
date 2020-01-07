@@ -13,8 +13,8 @@
 
 uint8_t update_slot = 0;
 
-void start_OTA(uint8_t slot_number);
-void receive_metadata(uint8_t* metadata, uint8_t size);
+uint8_t* start_OTA(uint8_t slot_number);
+uint8_t* receive_metadata(uint8_t* metadata, uint8_t size);
 uint8_t* send_metadata(uint8_t slot_number);
 void receive_partial_crcs();
 void receive_block();
@@ -40,11 +40,22 @@ uint8_t* command_handler(uint8_t* command) {
     switch (command[COMMAND_METHOD])
     {
     case START_OTA:
-        if(command[COMMAND_PARAMETER_SIZE] == 1) start_OTA(command[COMMAND_PARAMETER] - 1);
+        if(command[COMMAND_PARAMETER_SIZE] == 1) {
+            if(command[COMMAND_PARAMETER] == 1 || command[COMMAND_PARAMETER] == 2) {
+                data = start_OTA(command[COMMAND_PARAMETER] - 1);
+                if(*data == NO_ERROR) {
+                    memcpy(&response[COMMAND_METHOD], data + 1, data[2] + 2);
+                    response[COMMAND_SIZE] += data[2];
+
+                } else set_error(response, *data);
+            } else set_error(response, SLOT_OUT_OF_RANGE);
+        } else set_error(response, PARAMETER_OVERLOAD);
         break;
+
     case SEND_METADATA:
         receive_metadata(&response[COMMAND_PARAMETER], response[COMMAND_PARAMETER_SIZE]);
         break;
+
     case RECEIVE_METADATA:
         if(command[COMMAND_PARAMETER_SIZE] == 1) {
             if(command[COMMAND_PARAMETER] == 1 || command[COMMAND_PARAMETER] == 2) {
@@ -52,22 +63,20 @@ uint8_t* command_handler(uint8_t* command) {
                 if(*data == NO_ERROR) {
                     memcpy(&response[COMMAND_METHOD], data + 1, data[2] + 2);
                     response[COMMAND_SIZE] += data[2];
-                } else {
-                    set_error(response, *data);
-                }
-            } else {
-                set_error(response, SLOT_OUT_OF_RANGE);
-            }
-        } else {
-            set_error(response, PARAMETER_OVERLOAD);
-        }
+
+                } else set_error(response, *data);
+            } else set_error(response, SLOT_OUT_OF_RANGE);
+        } else set_error(response, PARAMETER_OVERLOAD);
         break;
+
     case SEND_PARTIAL_CRCS:
         receive_partial_crcs();
         break;
+
     case SEND_BLOCK:
         receive_block();
         break;
+
     case CHECK_MD5:
         if(command[COMMAND_PARAMETER_SIZE] == 1) {
             if(command[COMMAND_PARAMETER] == 1 || command[COMMAND_PARAMETER] == 2) {
@@ -75,19 +84,16 @@ uint8_t* command_handler(uint8_t* command) {
                 if(*data == NO_ERROR) {
                     memcpy(&response[COMMAND_METHOD], data + 1, data[2] + 2);
                     response[COMMAND_SIZE] += data[2];
-                } else {
-                    set_error(response, *data);
-                }
-            } else {
-                set_error(response, SLOT_OUT_OF_RANGE);
-            }
-        } else {
-            set_error(response, PARAMETER_OVERLOAD);
-        }
+
+                } else set_error(response, *data);
+            } else set_error(response, SLOT_OUT_OF_RANGE);
+        } else set_error(response, PARAMETER_OVERLOAD);
         break;
+
     case STOP_OTA:
         stop_OTA();
         break;
+
     default:
         break;
     }
@@ -96,21 +102,40 @@ uint8_t* command_handler(uint8_t* command) {
     return response;
 }
 
-void start_OTA(uint8_t slot_number) {
+uint8_t* start_OTA(uint8_t slot_number) {
+    int error;
+    uint8_t* data = malloc(3);
+    data[0] = 0;
+    data[1] = RECEIVE_METADATA;
+    data[2] = 0;
+    if(state == UPDATE) {
+        //TODO: Implement receive function
+    } else return throw_error(data, UPDATE_NOT_STARTED);
 
+    return data;
 }
 
-void receive_metadata(uint8_t* metadata, uint8_t size) {
+uint8_t* receive_metadata(uint8_t* metadata, uint8_t size) {
+    int error;
+    uint8_t* data = malloc(3);
+    data[0] = 0;
+    data[1] = RECEIVE_METADATA;
+    data[2] = 0;
+    if(state == UPDATE) {
+        //TODO: Implement receive function
+    } else return throw_error(data, UPDATE_NOT_STARTED);
 
+    return data;
 }
 
 uint8_t* send_metadata(uint8_t slot_number) {
     int error;
-    uint8_t* data = malloc(65);
+    uint8_t* data = malloc(METADATA_SIZE + 3);
+    data[0] = 0;
     data[1] = RECEIVE_METADATA;
     data[2] = METADATA_SIZE;
 
-    if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number, &data[3], METADATA_SIZE)) != NO_ERROR) return error_handler(data, error);
+    if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number, &data[3], METADATA_SIZE)) != NO_ERROR) return throw_error(data, error);
     return data;
 }
 
@@ -128,7 +153,8 @@ void check_partial_crc() {
 
 uint8_t* check_md5(uint8_t slot_number) {
     int error;
-    uint8_t* data = malloc(65);
+    uint8_t* data = malloc(CRC_SIZE + 1 + 3);
+    data[0] = 0;
     data[1] = CHECK_MD5;
     data[2] = CRC_SIZE + 1;
 
@@ -136,16 +162,17 @@ uint8_t* check_md5(uint8_t slot_number) {
     MD5_Init(&md5_c);
 
     uint16_t num_blocks;
-    if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number + NUM_BLOCKS_OFFSET, (uint8_t*)&num_blocks, sizeof(uint16_t))) != NO_ERROR) return error_handler(data, error);
+    if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number + NUM_BLOCKS_OFFSET, (uint8_t*)&num_blocks, sizeof(uint16_t))) != NO_ERROR) return throw_error(data, error);
 
     uint8_t meta_crc[CRC_SIZE];
-    if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number + CRC_OFFSET, meta_crc, CRC_SIZE)) != NO_ERROR) return error_handler(data, error);
+    if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number + CRC_OFFSET, meta_crc, CRC_SIZE)) != NO_ERROR) return throw_error(data, error);
 
     uint8_t* buffer = malloc(num_blocks * sizeof(uint8_t));
-    if(buffer == NULL) return error_handler(data, MEMORY_FULL);
+    if(buffer == NULL) return throw_error(data, MEMORY_FULL);
+
     if((error = slot_read_bytes(slot_number, 0, buffer, num_blocks)) != NO_ERROR) {
         free(buffer);
-        return error_handler(data, error);
+        return throw_error(data, error);
     }
 
     MD5_Update(&md5_c, buffer, num_blocks);
