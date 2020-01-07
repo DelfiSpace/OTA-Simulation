@@ -29,8 +29,8 @@ void print_error(enum error_codes error) {
     case MEMORY_FULL:
         puts("The memory is full.");
         break;
-    case PARAMETER_OVERLOAD:
-        puts("To many parameters provided for function.");
+    case PARAMETER_MISMATCH:
+        puts("Invalid parameter size provided to function.");
         break;
     case UPDATE_NOT_STARTED:
         puts("The update has not started yet.");

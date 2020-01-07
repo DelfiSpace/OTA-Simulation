@@ -14,7 +14,7 @@
 uint8_t update_slot = 0;
 
 uint8_t* start_OTA(uint8_t slot_number);
-uint8_t* receive_metadata(uint8_t* metadata, uint8_t size);
+uint8_t* receive_metadata(uint8_t* metadata);
 uint8_t* send_metadata(uint8_t slot_number);
 void receive_partial_crcs();
 void receive_block();
@@ -49,11 +49,15 @@ uint8_t* command_handler(uint8_t* command) {
 
                 } else set_error(response, *data);
             } else set_error(response, SLOT_OUT_OF_RANGE);
-        } else set_error(response, PARAMETER_OVERLOAD);
+        } else set_error(response, PARAMETER_MISMATCH);
         break;
 
     case SEND_METADATA:
-        receive_metadata(&response[COMMAND_PARAMETER], response[COMMAND_PARAMETER_SIZE]);
+        if(command[COMMAND_PARAMETER_SIZE] == METADATA_SIZE - 1) {
+            data = receive_metadata(&command[COMMAND_PARAMETER]);
+            command[COMMAND_PARAMETER_SIZE] = 0;
+            if(*data != NO_ERROR) set_error(response, *data);
+        } else set_error(response, PARAMETER_MISMATCH);
         break;
 
     case RECEIVE_METADATA:
@@ -66,7 +70,7 @@ uint8_t* command_handler(uint8_t* command) {
 
                 } else set_error(response, *data);
             } else set_error(response, SLOT_OUT_OF_RANGE);
-        } else set_error(response, PARAMETER_OVERLOAD);
+        } else set_error(response, PARAMETER_MISMATCH);
         break;
 
     case SEND_PARTIAL_CRCS:
@@ -87,7 +91,7 @@ uint8_t* command_handler(uint8_t* command) {
 
                 } else set_error(response, *data);
             } else set_error(response, SLOT_OUT_OF_RANGE);
-        } else set_error(response, PARAMETER_OVERLOAD);
+        } else set_error(response, PARAMETER_MISMATCH);
         break;
 
     case STOP_OTA:
@@ -95,7 +99,7 @@ uint8_t* command_handler(uint8_t* command) {
             data = stop_OTA();
             command[COMMAND_PARAMETER_SIZE] = 0;
             if(*data != NO_ERROR) set_error(response, *data);
-        } else set_error(response, PARAMETER_OVERLOAD);
+        } else set_error(response, PARAMETER_MISMATCH);
         break;
 
     default:
@@ -107,11 +111,10 @@ uint8_t* command_handler(uint8_t* command) {
 }
 
 uint8_t* start_OTA(uint8_t slot_number) {
-    int error;
     uint8_t* data = malloc(3);
     data[0] = 0;
     data[1] = 0;
-    
+
     if(state == IDLE) {
         state = UPDATE;
         update_slot = slot_number;
@@ -120,14 +123,14 @@ uint8_t* start_OTA(uint8_t slot_number) {
     return data;
 }
 
-uint8_t* receive_metadata(uint8_t* metadata, uint8_t size) {
+uint8_t* receive_metadata(uint8_t* metadata) {
     int error;
     uint8_t* data = malloc(3);
     data[0] = 0;
     data[1] = 0;
 
     if(state == UPDATE) {
-        //TODO: Implement receive function
+        if((error = fram_write_bytes((METADATA_SIZE + PAR_CRC_SIZE) * update_slot + 1, metadata, METADATA_SIZE - 1)) != NO_ERROR) return throw_error(data, error);
     } else return throw_error(data, UPDATE_NOT_STARTED);
 
     return data;
@@ -198,7 +201,6 @@ void write_to_flash() {
 }
 
 uint8_t* stop_OTA() {
-    int error;
     uint8_t* data = malloc(3);
     data[0] = 0;
     data[1] = 0;
