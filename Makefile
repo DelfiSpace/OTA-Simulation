@@ -1,4 +1,4 @@
-CFLAGS = -Wall -g -O0
+CFLAGS = -Wall -g -O0 -Wno-unused-variable
 
 TARGET = ./tests/$(test)
 BIN = $(test)
