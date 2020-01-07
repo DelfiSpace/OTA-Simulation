@@ -11,6 +11,8 @@
 #include "slot_handler.h"
 #include "error_handler.h"
 
+uint8_t update_slot = 0;
+
 void start_OTA(uint8_t slot_number);
 void receive_metadata(uint8_t* metadata, uint8_t size);
 uint8_t* send_metadata(uint8_t slot_number);
@@ -29,7 +31,7 @@ uint8_t* command_handler(uint8_t* command) {
     uint8_t* response = malloc(MAX_COMMAND_SIZE);
     response[COMMAND_DESTINATION] = command[COMMAND_SOURCE];
     response[COMMAND_SOURCE] = command[COMMAND_DESTINATION];
-    response[COMMAND_SIZE] = 8;
+    response[COMMAND_SIZE] = 7;
     response[COMMAND_STATE] = COMMAND_REPLY;
     response[COMMAND_METHOD] = command[COMMAND_METHOD];
 
@@ -47,17 +49,17 @@ uint8_t* command_handler(uint8_t* command) {
         if(command[COMMAND_PARAMETER_SIZE] == 1) {
             if(command[COMMAND_PARAMETER] == 1 || command[COMMAND_PARAMETER] == 2) {
                 data = send_metadata(command[COMMAND_PARAMETER] - 1);
-                memcpy(&response[COMMAND_METHOD], data + 1, data[2]);
-                response[COMMAND_SIZE] += data[2];
+                if(*data == NO_ERROR) {
+                    memcpy(&response[COMMAND_METHOD], data + 1, data[2] + 2);
+                    response[COMMAND_SIZE] += data[2];
+                } else {
+                    set_error(response, *data);
+                }
             } else {
-                response[COMMAND_STATE] = COMMAND_ERROR;
-                response[COMMAND_PARAMETER_SIZE] = 1;
-                response[COMMAND_PARAMETER] = SLOT_OUT_OF_RANGE;
+                set_error(response, SLOT_OUT_OF_RANGE);
             }
         } else {
-            response[COMMAND_STATE] = COMMAND_ERROR;
-            response[COMMAND_PARAMETER_SIZE] = 1;
-            response[COMMAND_PARAMETER] = PARAMETER_OVERLOAD;
+            set_error(response, PARAMETER_OVERLOAD);
         }
         break;
     case SEND_PARTIAL_CRCS:
@@ -70,17 +72,17 @@ uint8_t* command_handler(uint8_t* command) {
         if(command[COMMAND_PARAMETER_SIZE] == 1) {
             if(command[COMMAND_PARAMETER] == 1 || command[COMMAND_PARAMETER] == 2) {
                 data = check_md5(command[COMMAND_PARAMETER] - 1);
-                memcpy(&response[COMMAND_METHOD], data + 1, data[2]);
-                response[COMMAND_SIZE] += data[2];
+                if(*data == NO_ERROR) {
+                    memcpy(&response[COMMAND_METHOD], data + 1, data[2] + 2);
+                    response[COMMAND_SIZE] += data[2];
+                } else {
+                    set_error(response, *data);
+                }
             } else {
-                response[COMMAND_STATE] = COMMAND_ERROR;
-                response[COMMAND_PARAMETER_SIZE] = 1;
-                response[COMMAND_PARAMETER] = SLOT_OUT_OF_RANGE;
+                set_error(response, SLOT_OUT_OF_RANGE);
             }
         } else {
-            response[COMMAND_STATE] = COMMAND_ERROR;
-            response[COMMAND_PARAMETER_SIZE] = 1;
-            response[COMMAND_PARAMETER] = PARAMETER_OVERLOAD;
+            set_error(response, PARAMETER_OVERLOAD);
         }
         break;
     case STOP_OTA:

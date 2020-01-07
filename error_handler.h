@@ -13,5 +13,6 @@ enum error_codes{
 };
 
 uint8_t* error_handler(uint8_t* data, enum error_codes error);
+void set_error(uint8_t* data, enum error_codes error);
 
 #endif
