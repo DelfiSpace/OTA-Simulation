@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 
     FILE *file = fopen("slots/flash_file.bin", "w");
 
-    fseek(file, CRC_SIZE+1, SEEK_SET);
+    fseek(file, CRC_SIZE, SEEK_SET);
     fwrite(&version, sizeof(uint32_t), 1, file);
     fwrite(&num_blocks, sizeof(uint16_t), 1, file);
     fseek(file, num_blocks, SEEK_CUR);
@@ -39,7 +39,6 @@ int main(int argc, char* argv[]) {
             uint8_t temp = (uint8_t)rand();
             MD5_Update(&md5_c, &temp, 1);
             putc(temp, file);
-            printf("%02X ", temp);
 
             if(j == BLOCK_SIZE) {
                 *(par_crcs + index) = val;
@@ -59,18 +58,15 @@ int main(int argc, char* argv[]) {
             }
         }
     	*(par_crcs + index) = val;
-        puts("\n");
-        for(int i = 0; i < num_blocks; i++) printf("%02X", par_crcs[i]);
-        putchar('\n');
 
         MD5_Final(digest, &md5_c);
 
         rewind(file);
-        putc(TRANSMISSION, file);
         fwrite(digest, sizeof(uint8_t), CRC_SIZE, file);
-        fseek(file, METADATA_SIZE, SEEK_SET);
+        fseek(file, METADATA_SIZE - 1, SEEK_SET);
         fwrite(par_crcs, sizeof(uint8_t), num_blocks, file);
         fclose(file);
+        free(par_crcs);
     }
     return 0;
 }
