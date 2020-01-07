@@ -1,5 +1,7 @@
 #include <stdbool.h>
 
+#include "error_handler.h"
+
 #include "def.h"
 
 #ifndef SLOT_HANDLER_H_
@@ -7,11 +9,11 @@
 
 //bool set_boot_slot(struct Slot* slot, bool always);
 
-void fram_write_bytes(uint32_t address, uint8_t* data, uint16_t len);
-void fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len);
+enum error_codes fram_write_bytes(uint32_t address, uint8_t* data, uint16_t len);
+enum error_codes fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len);
 
-void slot_write_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len);
-void slot_read_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len);
+enum error_codes slot_write_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len);
+enum error_codes slot_read_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len);
 
 // bool erase(struct Slot* slot);
 

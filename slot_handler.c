@@ -10,64 +10,68 @@
 struct Slot* updating_slot;
 fpos_t update_pointer;
 
-void fram_write_bytes(uint32_t address, uint8_t* data, uint16_t len) {
+enum error_codes fram_write_bytes(uint32_t address, uint8_t* data, uint16_t len) {
     const char* func_name = "fram_write_bytes";
 
     FILE* file = fopen(fram_file, "r+");
     if(file == NULL) {
         printf("%s: Can't access FRAM!\n", func_name);
-        return;
+        return NO_FRAM_ACCESS;
     }
 
     fseek(file, address, SEEK_SET);
     fwrite(data, sizeof(uint8_t), len, file);
 
     fclose(file);
+    return NO_ERROR;
 }
 
-void fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len) {
+enum error_codes fram_read_bytes(uint32_t address, uint8_t* data, uint16_t len) {
     const char* func_name = "fram_read_bytes";
 
     FILE* file = fopen(fram_file, "r");
     if(file == NULL) {
         printf("%s: Can't access FRAM!\n", func_name);
-        return;
+        return NO_FRAM_ACCESS;;
     }
 
     fseek(file, address, SEEK_SET);
     fread(data, sizeof(uint8_t), len, file);
 
     fclose(file);
+    return NO_ERROR;
 }
 
-void slot_write_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len) {
+enum error_codes slot_write_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len) {
     const char* func_name = "slot_write_bytes";
 
     FILE* file = fopen(fram_file, "r+");
     if(file == NULL) {
         printf("%s: Can't access slot %d!\n", func_name, slot);
-        return;
+        return NO_SLOT_ACCESS;
     }
 
     fseek(file, address, SEEK_SET);
     fwrite(data, sizeof(uint8_t), len, file);
 
     fclose(file);
+    return NO_ERROR;
 }
 
-void slot_read_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len) {
+enum error_codes slot_read_bytes(uint8_t slot, uint32_t address, uint8_t* data, uint16_t len) {
     const char* func_name = "slot_read_bytes";
 
     FILE* file = fopen(slot_files[slot], "r");
     if(file == NULL) {
         printf("%s: Can't access slot %d!\n", func_name, slot);
-        return;
+        return NO_SLOT_ACCESS;
     }
 
     fseek(file, address, SEEK_SET);
     fread(data, sizeof(uint8_t), len, file);
 
     fclose(file);
+    return NO_ERROR;
 }
 
 // bool set_boot_slot(struct Slot* slot, bool always) {
