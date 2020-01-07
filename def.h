@@ -12,11 +12,6 @@
 #define PAR_CRC_SIZE (SLOT_SIZE / BLOCK_SIZE)
 #define METADATA_SIZE (CRC_SIZE + 4 + 2 + 1) 
 
-#define STATUS_OFFSET 0
-#define CRC_OFFSET 1
-#define VERSION_OFFSET (CRC_OFFSET + CRC_SIZE)
-#define NUM_BLOCKS_OFFSET (VERSION_OFFSET + 4)
-
 #define MAX_COMMAND_SIZE 256
 
 static const char* slot_files[2] = {"slots/slot1.bin", "slots/slot2.bin"};
@@ -72,6 +67,13 @@ struct Metadata
     uint32_t version;
     uint16_t num_blocks;
     uint8_t crc[CRC_SIZE];
+};
+
+enum metadata_offset {
+    STATUS_OFFSET,
+    CRC_OFFSET,
+    VERSION_OFFSET = CRC_OFFSET + CRC_SIZE,
+    NUM_BLOCKS_OFFSET = VERSION_OFFSET + 4
 };
 
 static const uint8_t CRC_TABLE[256] = { //CRC8-CCITT table, polynomial x^8+x^2+x+1

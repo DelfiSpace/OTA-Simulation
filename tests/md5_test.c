@@ -4,16 +4,26 @@
 #include "../OTA.h"
 
 int main(int argc, char* argv[]) {
-    uint8_t command[] = {CHECK_MD5, 1, 1};
+    uint8_t command[256] = {0};
+    command[COMMAND_DESTINATION] = 18;
+    command[COMMAND_SIZE] = 5;
+    command[COMMAND_STATE] = COMMAND_REQUEST;
+    command[COMMAND_METHOD] = CHECK_MD5;
+    command[COMMAND_PARAMETER] = 2;
+    command[COMMAND_PARAMETER_SIZE] = 1;
+
     uint8_t* response = command_handler(command);
     
-    for(int i = 0; i < *(response + 1) -1; i++) printf("%02X", *(response + 3 + i));
+    for(int i = 0; i < response[COMMAND_PARAMETER_SIZE] - 1; i++) printf("%02X ", response[i + COMMAND_PARAMETER + 1]);
     putchar('\n');
 
-    if(*(response+2)) {
+    printf("CRC correct: ");
+    if(response[COMMAND_PARAMETER]) {
         puts("true");
     } else {
         puts("false");
     }
+
+    free(response);
     return 0;
 }

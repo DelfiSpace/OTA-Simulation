@@ -55,7 +55,11 @@ uint8_t* command_handler(uint8_t* command) {
         receive_block();
         break;
     case CHECK_MD5:
-        if(command[COMMAND_PARAMETER_SIZE] == 1) return check_md5(command[COMMAND_PARAMETER] - 1);
+        if(command[COMMAND_PARAMETER_SIZE] == 1) {
+            data = check_md5(command[COMMAND_PARAMETER] - 1);
+            memcpy(&response[COMMAND_METHOD], data + 1, data[2]);
+            response[COMMAND_SIZE] += data[2];
+        }
         break;
     case STOP_OTA:
         stop_OTA();
@@ -80,7 +84,7 @@ uint8_t* send_metadata(uint8_t slot_number) {
     int error;
     uint8_t* data = malloc(65);
     data[1] = RECEIVE_METADATA;
-    data[2] = METADATA_SIZE + 2;
+    data[2] = METADATA_SIZE;
 
     if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number, &data[3], METADATA_SIZE)) != NO_ERROR) return error_handler(data, error);
     return data;
@@ -102,7 +106,7 @@ uint8_t* check_md5(uint8_t slot_number) {
     int error;
     uint8_t* data = malloc(65);
     data[1] = CHECK_MD5;
-    data[2] = CRC_SIZE + 1 + 2;
+    data[2] = CRC_SIZE + 1;
 
     MD5_CTX md5_c;
     MD5_Init(&md5_c);
