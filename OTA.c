@@ -97,13 +97,14 @@ uint8_t* check_md5(uint8_t slot_number) {
     MD5_Init(&md5_c);
 
     uint16_t num_blocks;
-    fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number + METADATA_SIZE - sizeof(uint16_t), (uint8_t*)&num_blocks, sizeof(uint16_t));
+    fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number + NUM_BLOCKS_OFFSET, (uint8_t*)&num_blocks, sizeof(uint16_t));
     uint8_t meta_crc[CRC_SIZE];
-    fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number + sizeof(uint8_t), meta_crc, CRC_SIZE);
+    fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number + CRC_OFFSET, meta_crc, CRC_SIZE);
 
     uint8_t* buffer = malloc(num_blocks * sizeof(uint8_t));
     slot_read_bytes(slot_number, 0, buffer, num_blocks);
     MD5_Update(&md5_c, buffer, num_blocks);
+    free(buffer);
 
     MD5_Final(data + 3, &md5_c);
 

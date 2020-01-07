@@ -12,6 +12,11 @@
 #define PAR_CRC_SIZE (SLOT_SIZE / BLOCK_SIZE)
 #define METADATA_SIZE (CRC_SIZE + 4 + 2 + 1) 
 
+#define STATUS_OFFSET 0
+#define CRC_OFFSET 1
+#define VERSION_OFFSET (CRC_OFFSET + CRC_SIZE)
+#define NUM_BLOCKS_OFFSET (VERSION_OFFSET + 4)
+
 static const char* slot_files[2] = {"slots/slot1.bin", "slots/slot2.bin"};
 static const char* fram_file = "slots/fram.bin";
 
