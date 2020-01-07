@@ -29,7 +29,9 @@ uint8_t* command_handler(uint8_t* command) {
     uint8_t* response = malloc(MAX_COMMAND_SIZE);
     response[COMMAND_DESTINATION] = command[COMMAND_SOURCE];
     response[COMMAND_SOURCE] = command[COMMAND_DESTINATION];
-    response[COMMAND_SIZE] = 5;
+    response[COMMAND_SIZE] = 8;
+    response[COMMAND_STATE] = COMMAND_REPLY;
+    response[COMMAND_METHOD] = command[COMMAND_METHOD];
 
     uint8_t* data;
 
@@ -43,9 +45,19 @@ uint8_t* command_handler(uint8_t* command) {
         break;
     case RECEIVE_METADATA:
         if(command[COMMAND_PARAMETER_SIZE] == 1) {
-            data = send_metadata(command[COMMAND_PARAMETER] - 1);
-            memcpy(&response[COMMAND_METHOD], data + 1, data[2]);
-            response[COMMAND_SIZE] += data[2];
+            if(command[COMMAND_PARAMETER] == 1 || command[COMMAND_PARAMETER] == 2) {
+                data = send_metadata(command[COMMAND_PARAMETER] - 1);
+                memcpy(&response[COMMAND_METHOD], data + 1, data[2]);
+                response[COMMAND_SIZE] += data[2];
+            } else {
+                response[COMMAND_STATE] = COMMAND_ERROR;
+                response[COMMAND_PARAMETER_SIZE] = 1;
+                response[COMMAND_PARAMETER] = SLOT_OUT_OF_RANGE;
+            }
+        } else {
+            response[COMMAND_STATE] = COMMAND_ERROR;
+            response[COMMAND_PARAMETER_SIZE] = 1;
+            response[COMMAND_PARAMETER] = PARAMETER_OVERLOAD;
         }
         break;
     case SEND_PARTIAL_CRCS:
@@ -56,9 +68,19 @@ uint8_t* command_handler(uint8_t* command) {
         break;
     case CHECK_MD5:
         if(command[COMMAND_PARAMETER_SIZE] == 1) {
-            data = check_md5(command[COMMAND_PARAMETER] - 1);
-            memcpy(&response[COMMAND_METHOD], data + 1, data[2]);
-            response[COMMAND_SIZE] += data[2];
+            if(command[COMMAND_PARAMETER] == 1 || command[COMMAND_PARAMETER] == 2) {
+                data = check_md5(command[COMMAND_PARAMETER] - 1);
+                memcpy(&response[COMMAND_METHOD], data + 1, data[2]);
+                response[COMMAND_SIZE] += data[2];
+            } else {
+                response[COMMAND_STATE] = COMMAND_ERROR;
+                response[COMMAND_PARAMETER_SIZE] = 1;
+                response[COMMAND_PARAMETER] = SLOT_OUT_OF_RANGE;
+            }
+        } else {
+            response[COMMAND_STATE] = COMMAND_ERROR;
+            response[COMMAND_PARAMETER_SIZE] = 1;
+            response[COMMAND_PARAMETER] = PARAMETER_OVERLOAD;
         }
         break;
     case STOP_OTA:
@@ -118,6 +140,7 @@ uint8_t* check_md5(uint8_t slot_number) {
     if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number + CRC_OFFSET, meta_crc, CRC_SIZE)) != NO_ERROR) return error_handler(data, error);
 
     uint8_t* buffer = malloc(num_blocks * sizeof(uint8_t));
+    if(buffer == NULL) return error_handler(data, MEMORY_FULL);
     if((error = slot_read_bytes(slot_number, 0, buffer, num_blocks)) != NO_ERROR) {
         free(buffer);
         return error_handler(data, error);

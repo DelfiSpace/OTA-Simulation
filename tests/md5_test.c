@@ -9,19 +9,24 @@ int main(int argc, char* argv[]) {
     command[COMMAND_SIZE] = 5;
     command[COMMAND_STATE] = COMMAND_REQUEST;
     command[COMMAND_METHOD] = CHECK_MD5;
-    command[COMMAND_PARAMETER] = 2;
+    command[COMMAND_PARAMETER] = 0;
     command[COMMAND_PARAMETER_SIZE] = 1;
 
     uint8_t* response = command_handler(command);
-    
-    for(int i = 0; i < response[COMMAND_PARAMETER_SIZE] - 1; i++) printf("%02X ", response[i + COMMAND_PARAMETER + 1]);
-    putchar('\n');
+    if(response[COMMAND_STATE] != COMMAND_ERROR) {
+        for(int i = 0; i < response[COMMAND_PARAMETER_SIZE] - 1; i++) printf("%02X ", response[i + COMMAND_PARAMETER + 1]);
+        putchar('\n');
 
-    printf("CRC correct: ");
-    if(response[COMMAND_PARAMETER]) {
-        puts("true");
+        printf("CRC correct: ");
+        if(response[COMMAND_PARAMETER]) {
+            puts("true");
+        } else {
+            puts("false");
+        }
     } else {
-        puts("false");
+        puts("Error occurred!");
+        for(int i = 0; i < response[COMMAND_SIZE]; i++) printf("%02X ", response[i]);
+        putchar('\n');
     }
 
     free(response);
