@@ -21,7 +21,7 @@ void receive_block();
 void check_partial_crc();
 uint8_t* check_md5(uint8_t slot_number);
 void write_to_flash();
-void stop_OTA();
+uint8_t* stop_OTA();
 
 /*  Description: Takes in commands and handles them accordingly.
     Simultates the transmission between ground station and the satellite.
@@ -35,7 +35,7 @@ uint8_t* command_handler(uint8_t* command) {
     response[COMMAND_STATE] = COMMAND_REPLY;
     response[COMMAND_METHOD] = command[COMMAND_METHOD];
 
-    uint8_t* data;
+    uint8_t* data = NULL;
 
     switch (command[COMMAND_METHOD])
     {
@@ -44,8 +44,8 @@ uint8_t* command_handler(uint8_t* command) {
             if(command[COMMAND_PARAMETER] == 1 || command[COMMAND_PARAMETER] == 2) {
                 data = start_OTA(command[COMMAND_PARAMETER] - 1);
                 if(*data == NO_ERROR) {
-                    memcpy(&response[COMMAND_METHOD], data + 1, data[2] + 2);
-                    response[COMMAND_SIZE] += data[2];
+                    memcpy(&response[COMMAND_PARAMETER_SIZE], data + 1, data[1] + 1);
+                    response[COMMAND_SIZE] += data[1];
 
                 } else set_error(response, *data);
             } else set_error(response, SLOT_OUT_OF_RANGE);
@@ -61,8 +61,8 @@ uint8_t* command_handler(uint8_t* command) {
             if(command[COMMAND_PARAMETER] == 1 || command[COMMAND_PARAMETER] == 2) {
                 data = send_metadata(command[COMMAND_PARAMETER] - 1);
                 if(*data == NO_ERROR) {
-                    memcpy(&response[COMMAND_METHOD], data + 1, data[2] + 2);
-                    response[COMMAND_SIZE] += data[2];
+                    memcpy(&response[COMMAND_PARAMETER_SIZE], data + 1, data[1] + 1);
+                    response[COMMAND_SIZE] += data[1];
 
                 } else set_error(response, *data);
             } else set_error(response, SLOT_OUT_OF_RANGE);
@@ -82,8 +82,8 @@ uint8_t* command_handler(uint8_t* command) {
             if(command[COMMAND_PARAMETER] == 1 || command[COMMAND_PARAMETER] == 2) {
                 data = check_md5(command[COMMAND_PARAMETER] - 1);
                 if(*data == NO_ERROR) {
-                    memcpy(&response[COMMAND_METHOD], data + 1, data[2] + 2);
-                    response[COMMAND_SIZE] += data[2];
+                    memcpy(&response[COMMAND_PARAMETER_SIZE], data + 1, data[1] + 1);
+                    response[COMMAND_SIZE] += data[1];
 
                 } else set_error(response, *data);
             } else set_error(response, SLOT_OUT_OF_RANGE);
@@ -91,14 +91,18 @@ uint8_t* command_handler(uint8_t* command) {
         break;
 
     case STOP_OTA:
-        stop_OTA();
+        if(command[COMMAND_PARAMETER_SIZE] == 0) {
+            data = stop_OTA();
+            command[COMMAND_PARAMETER_SIZE] = 0;
+            if(*data != NO_ERROR) set_error(response, *data);
+        } else set_error(response, PARAMETER_OVERLOAD);
         break;
 
     default:
         break;
     }
 
-    free(data);
+    if(data != NULL) free(data);
     return response;
 }
 
@@ -106,11 +110,12 @@ uint8_t* start_OTA(uint8_t slot_number) {
     int error;
     uint8_t* data = malloc(3);
     data[0] = 0;
-    data[1] = RECEIVE_METADATA;
-    data[2] = 0;
-    if(state == UPDATE) {
-        //TODO: Implement receive function
-    } else return throw_error(data, UPDATE_NOT_STARTED);
+    data[1] = 0;
+    
+    if(state == IDLE) {
+        state = UPDATE;
+        update_slot = slot_number;
+    } else return throw_error(data, UPDATE_ALREADY_STARTED);
 
     return data;
 }
@@ -119,8 +124,8 @@ uint8_t* receive_metadata(uint8_t* metadata, uint8_t size) {
     int error;
     uint8_t* data = malloc(3);
     data[0] = 0;
-    data[1] = RECEIVE_METADATA;
-    data[2] = 0;
+    data[1] = 0;
+
     if(state == UPDATE) {
         //TODO: Implement receive function
     } else return throw_error(data, UPDATE_NOT_STARTED);
@@ -130,12 +135,12 @@ uint8_t* receive_metadata(uint8_t* metadata, uint8_t size) {
 
 uint8_t* send_metadata(uint8_t slot_number) {
     int error;
-    uint8_t* data = malloc(METADATA_SIZE + 3);
+    uint8_t* data = malloc(METADATA_SIZE + 2);
     data[0] = 0;
-    data[1] = RECEIVE_METADATA;
-    data[2] = METADATA_SIZE;
+    data[1] = METADATA_SIZE;
 
-    if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number, &data[3], METADATA_SIZE)) != NO_ERROR) return throw_error(data, error);
+    if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number, &data[2], METADATA_SIZE)) != NO_ERROR) return throw_error(data, error);
+
     return data;
 }
 
@@ -153,10 +158,9 @@ void check_partial_crc() {
 
 uint8_t* check_md5(uint8_t slot_number) {
     int error;
-    uint8_t* data = malloc(CRC_SIZE + 1 + 3);
+    uint8_t* data = malloc(CRC_SIZE + 1 + 2);
     data[0] = 0;
-    data[1] = CHECK_MD5;
-    data[2] = CRC_SIZE + 1;
+    data[1] = CRC_SIZE + 1;
 
     MD5_CTX md5_c;
     MD5_Init(&md5_c);
@@ -178,12 +182,12 @@ uint8_t* check_md5(uint8_t slot_number) {
     MD5_Update(&md5_c, buffer, num_blocks);
     free(buffer);
 
-    MD5_Final(&data[4], &md5_c);
+    MD5_Final(&data[3], &md5_c);
 
-    if(memcmp(&data[4], meta_crc, CRC_SIZE) == 0) {
-        data[3] = true;
+    if(memcmp(&data[3], meta_crc, CRC_SIZE) == 0) {
+        data[2] = true;
     } else {
-        data[3] = false;
+        data[2] = false;
     }
     
     return data;
@@ -193,6 +197,16 @@ void write_to_flash() {
 
 }
 
-void stop_OTA() {
+uint8_t* stop_OTA() {
+    int error;
+    uint8_t* data = malloc(3);
+    data[0] = 0;
+    data[1] = 0;
 
+    if(state == UPDATE) {
+        state = IDLE;
+        update_slot = 0;
+    } else return throw_error(data, UPDATE_NOT_STARTED);
+
+    return data;
 }
