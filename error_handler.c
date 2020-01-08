@@ -44,6 +44,15 @@ void print_error(enum error_codes error) {
     case METADATA_NOT_RECEIVED:
         puts("The metadata has not been received yet.");
         break;
+    case PARTIAL_ALREADY_RECEIVED:
+        puts("The partial crcs have already been received.");
+        break;
+    case PARTIAL_NOT_RECEIVED:
+        puts("The partial crcs have not been received yet.");
+        break;
+    case CRC_MISMATCH:
+        puts("A partial crc mismatch has occurred.");
+        break;
     default:
         break;
     }

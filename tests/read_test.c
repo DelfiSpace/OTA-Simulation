@@ -19,9 +19,6 @@ void print_metadata(uint8_t* metadata) {
         case FULL:
             printf("Full\n");
             break;
-        case TRANSMISSION:
-            printf("Transmission\n");
-            break;
         default:
             printf("Unknown slot status %d!\n", metadata[0]);
             break;

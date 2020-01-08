@@ -18,14 +18,18 @@ uint16_t num_update_blocks = 0;
 uint16_t received_par_crcs = 0;
 
 uint8_t* start_OTA(uint8_t slot_number);
+
 uint8_t* receive_metadata(uint8_t* metadata);
 uint8_t* send_metadata(uint8_t slot_number);
+
 uint8_t* receive_partial_crcs(uint8_t* crc_block, uint8_t num_bytes);
-uint8_t* receive_block();
-void check_partial_crc();
+uint8_t* receive_block(uint8_t* data_block, uint16_t block_offset);
+bool check_partial_crc(uint8_t* data_block, uint16_t block_offset);
+
 uint8_t* check_md5(uint8_t slot_number);
-void write_to_flash();
+
 uint8_t* stop_OTA();
+
 uint8_t* erase_slot(uint8_t param);
 
 /*  Description: Takes in commands and handles them accordingly.
@@ -36,6 +40,7 @@ uint8_t* command_handler(uint8_t* command) {
     uint8_t* response = malloc(MAX_COMMAND_SIZE);
     response[COMMAND_DESTINATION] = command[COMMAND_SOURCE];
     response[COMMAND_SOURCE] = command[COMMAND_DESTINATION];
+    response[COMMAND_SERVICE] = 0;
     response[COMMAND_SIZE] = 7;
     response[COMMAND_STATE] = COMMAND_REPLY;
     response[COMMAND_METHOD] = command[COMMAND_METHOD];
@@ -89,7 +94,12 @@ uint8_t* command_handler(uint8_t* command) {
         break;
 
     case SEND_BLOCK:
-        receive_block();
+        if(command[COMMAND_PARAMETER_SIZE] <= BLOCK_SIZE + 1) {
+            data = receive_block(&command[COMMAND_PARAMETER + 1], command[COMMAND_PARAMETER]);
+            response[COMMAND_PARAMETER_SIZE] = 0;
+            if(*data != NO_ERROR) set_error(response, *data);
+
+        } else set_error(response, PARAMETER_MISMATCH);
         break;
 
     case CHECK_MD5:
@@ -175,23 +185,51 @@ uint8_t* receive_partial_crcs(uint8_t* crc_block, uint8_t num_bytes) {
 
     if((state_flags & UPDATE_FLAG) > 0) {
         if((state_flags & METADATA_FLAG) > 0) {
-            if(received_par_crcs < num_update_blocks * BLOCK_SIZE) {
-                if((error = fram_write_bytes((METADATA_SIZE + PAR_CRC_SIZE) * update_slot + METADATA_SIZE + received_par_crcs, crc_block, num_bytes)) != NO_ERROR) return throw_error(data, error);
+            if((state_flags & PARTIAL_CRC_FLAG) == 0) {
+                if(received_par_crcs < num_update_blocks * BLOCK_SIZE) {
+                    if((error = fram_write_bytes((METADATA_SIZE + PAR_CRC_SIZE) * update_slot + METADATA_SIZE + received_par_crcs, crc_block, num_bytes)) != NO_ERROR) return throw_error(data, error);
 
-                received_par_crcs += num_bytes;
-            } else return throw_error(data, PARAMETER_MISMATCH);
+                    received_par_crcs += num_bytes;
+                } else return throw_error(data, PARAMETER_MISMATCH);
+            } else return throw_error(data, PARTIAL_ALREADY_RECEIVED);    
         } else return throw_error(data, METADATA_NOT_RECEIVED);
     } else return throw_error(data, UPDATE_NOT_STARTED);
 
     return data;
 }
 
-uint8_t* receive_block() {
-    return NULL;
+uint8_t* receive_block(uint8_t* data_block, uint16_t block_offset) {
+    int error;
+    uint8_t* data = malloc(3);
+    data[0] = 0;
+    data[1] = 0;
+
+    if((state_flags & UPDATE_FLAG) > 0) {
+        if((state_flags & METADATA_FLAG) > 0) {
+            if((state_flags & PARTIAL_CRC_FLAG) == 0) {
+                if(received_par_crcs < num_update_blocks * BLOCK_SIZE) {
+                    if(check_partial_crc(data_block, block_offset)) {
+                        if((error = slot_write_bytes(update_slot, block_offset * BLOCK_SIZE, data_block, BLOCK_SIZE)) != NO_ERROR) return throw_error(data, error);
+                    } else return throw_error(data, CRC_MISMATCH);
+                } else return throw_error(data, PARAMETER_MISMATCH);
+            } else return throw_error(data, PARTIAL_ALREADY_RECEIVED);    
+        } else return throw_error(data, METADATA_NOT_RECEIVED);
+    } else return throw_error(data, UPDATE_NOT_STARTED);
+
+    return data;
 }
 
-void check_partial_crc() {
+bool check_partial_crc(uint8_t* data_block, uint16_t block_offset) {
+    uint8_t val = 0;
 
+	for(int i = 0; i < BLOCK_SIZE; i++) {
+		val = CRC_TABLE[val ^ data_block[i]];
+	}
+    
+    uint8_t crc;
+    fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * update_slot + METADATA_SIZE + block_offset, &crc, 1);
+
+    return crc == val;
 }
 
 uint8_t* check_md5(uint8_t slot_number) {
@@ -229,10 +267,6 @@ uint8_t* check_md5(uint8_t slot_number) {
     }
     
     return data;
-}
-
-void write_to_flash() {
-
 }
 
 uint8_t* stop_OTA() {

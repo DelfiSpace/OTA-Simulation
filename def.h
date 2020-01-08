@@ -40,7 +40,8 @@ enum command_states {
 enum flags {
     ERASE_FLAG = 0x01,
     UPDATE_FLAG = 0x02,
-    METADATA_FLAG = 0x04
+    METADATA_FLAG = 0x04,
+    PARTIAL_CRC_FLAG = 0x08
 };
 
 enum slot_status{

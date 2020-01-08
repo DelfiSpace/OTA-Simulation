@@ -13,7 +13,10 @@ enum error_codes{
     UPDATE_NOT_STARTED,
     UPDATE_ALREADY_STARTED,
     METADATA_ALREADY_RECEIVED,
-    METADATA_NOT_RECEIVED
+    METADATA_NOT_RECEIVED,
+    PARTIAL_ALREADY_RECEIVED,
+    PARTIAL_NOT_RECEIVED,
+    CRC_MISMATCH
 };
 
 uint8_t* throw_error(uint8_t* data, enum error_codes error);
