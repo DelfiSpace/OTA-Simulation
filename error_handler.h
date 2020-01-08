@@ -16,7 +16,8 @@ enum error_codes{
     METADATA_NOT_RECEIVED,
     PARTIAL_ALREADY_RECEIVED,
     PARTIAL_NOT_RECEIVED,
-    CRC_MISMATCH
+    CRC_MISMATCH,
+    MD5_MISMATCH
 };
 
 uint8_t* throw_error(uint8_t* data, enum error_codes error);

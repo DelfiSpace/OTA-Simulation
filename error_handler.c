@@ -53,6 +53,9 @@ void print_error(enum error_codes error) {
     case CRC_MISMATCH:
         puts("A partial crc mismatch has occurred.");
         break;
+    case MD5_MISMATCH:
+        puts("The md5 hash does no match.");
+        break;
     default:
         break;
     }

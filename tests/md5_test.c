@@ -14,9 +14,6 @@ int main(int argc, char* argv[]) {
 
     uint8_t* response = command_handler(command);
     if(response[COMMAND_STATE] != COMMAND_ERROR) {
-        for(int i = 0; i < response[COMMAND_PARAMETER_SIZE] - 1; i++) printf("%02X ", response[i + COMMAND_PARAMETER + 1]);
-        putchar('\n');
-
         printf("CRC correct: ");
         if(response[COMMAND_PARAMETER]) {
             puts("true");

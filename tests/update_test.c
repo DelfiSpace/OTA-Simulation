@@ -34,16 +34,14 @@ int main(int argc, char* argv[]) {
     command[COMMAND_SIZE] = 5;
     command[COMMAND_STATE] = COMMAND_REQUEST;
     command[COMMAND_METHOD] = START_OTA;
-    command[COMMAND_PARAMETER] = 2;
+    command[COMMAND_PARAMETER] = 1;
     command[COMMAND_PARAMETER_SIZE] = 1;
 
+    printf("Starting OTA... ");
     //Start OTA
     uint8_t* response = command_handler(command);
-    if(response[COMMAND_STATE] != COMMAND_ERROR) {
-        for(int i = 0; i < response[COMMAND_SIZE]; i++) printf("%02X ", response[i]);
-        putchar('\n');
-    } else print_error(response[COMMAND_PARAMETER]);
-    putchar('\n');
+    if(response[COMMAND_STATE] == COMMAND_ERROR) print_error(response[COMMAND_PARAMETER]);
+    else puts("Successful\n");
 
     FILE* update = fopen("./slots/flash_file.bin", "r");
     if(update == NULL) {
@@ -57,13 +55,11 @@ int main(int argc, char* argv[]) {
     command[COMMAND_PARAMETER_SIZE] = METADATA_SIZE - 1;
 
     num_blocks = command[COMMAND_PARAMETER + NUM_BLOCKS_OFFSET - 1];
-    
+
+    printf("Sending metadata... ");
     response = command_handler(command);
-    if(response[COMMAND_STATE] != COMMAND_ERROR) {
-        for(int i = 0; i < response[COMMAND_SIZE]; i++) printf("%02X ", response[i]);
-        putchar('\n');
-    } else print_error(response[COMMAND_PARAMETER]);
-    putchar('\n');
+    if(response[COMMAND_STATE] == COMMAND_ERROR) print_error(response[COMMAND_PARAMETER]);
+    else puts("Successful\n");
     
     partials = malloc(num_blocks);
     get_partials(partials, update, num_blocks);
@@ -75,15 +71,12 @@ int main(int argc, char* argv[]) {
         memcpy(&command[COMMAND_PARAMETER], partials + count * BLOCK_SIZE, BLOCK_SIZE);
         command[COMMAND_PARAMETER_SIZE] = BLOCK_SIZE;
         
-        printf("Send partials(%d): ", BLOCK_SIZE);
+        printf("Sending partials(%d): ", BLOCK_SIZE);
         for(int i = 0; i < BLOCK_SIZE; i++) printf("%02X ", command[COMMAND_PARAMETER + i]);
-        putchar('\n');
 
         response = command_handler(command);
-        if(response[COMMAND_STATE] != COMMAND_ERROR) {
-            for(int i = 0; i < response[COMMAND_SIZE]; i++) printf("%02X ", response[i]);
-            putchar('\n');
-        } else print_error(response[COMMAND_PARAMETER]);
+        if(response[COMMAND_STATE] == COMMAND_ERROR) print_error(response[COMMAND_PARAMETER]);
+        else puts("... Successful\n");
     }
 
     //Send remaining partials
@@ -91,15 +84,12 @@ int main(int argc, char* argv[]) {
         memcpy(&command[COMMAND_PARAMETER], partials + count * BLOCK_SIZE, num_blocks % BLOCK_SIZE);
         command[COMMAND_PARAMETER_SIZE] = num_blocks % BLOCK_SIZE;
 
-        printf("Send partials(%d): ", num_blocks % BLOCK_SIZE);
+        printf("Sending partials(%d): ", num_blocks % BLOCK_SIZE);
         for(int i = 0; i < num_blocks % BLOCK_SIZE; i++) printf("%02X ", command[COMMAND_PARAMETER + i]);
-        putchar('\n');
 
         response = command_handler(command);
-        if(response[COMMAND_STATE] != COMMAND_ERROR) {
-            for(int i = 0; i < response[COMMAND_SIZE]; i++) printf("%02X ", response[i]);
-            putchar('\n');
-        } else print_error(response[COMMAND_PARAMETER]);
+        if(response[COMMAND_STATE] == COMMAND_ERROR) print_error(response[COMMAND_PARAMETER]);
+        else puts("... Successful");
     }
     putchar('\n');
 
@@ -113,15 +103,12 @@ int main(int argc, char* argv[]) {
         fread(&command[COMMAND_PARAMETER + 1], sizeof(uint8_t), BLOCK_SIZE, update);
         command[COMMAND_PARAMETER_SIZE] = BLOCK_SIZE + 1;
         
-        printf("Send block: ");
-        for(int i = 0; i < BLOCK_SIZE; i++) printf("%02X ", command[COMMAND_PARAMETER + i]);
-        putchar('\n');
+        printf("Sending block: ");
+        for(int i = 0; i < BLOCK_SIZE; i++) printf("%02X ", command[COMMAND_PARAMETER + i + 1]);
 
         response = command_handler(command);
-        if(response[COMMAND_STATE] != COMMAND_ERROR) {
-            for(int j = 0; j < response[COMMAND_SIZE]; j++) printf("%02X ", response[j]);
-            putchar('\n');
-        } else print_error(response[COMMAND_PARAMETER]);
+        if(response[COMMAND_STATE] == COMMAND_ERROR) print_error(response[COMMAND_PARAMETER]);
+        else puts("... Successful");
     }
     putchar('\n');
 
@@ -130,12 +117,10 @@ int main(int argc, char* argv[]) {
     command[COMMAND_METHOD] = STOP_OTA;
     command[COMMAND_PARAMETER_SIZE] = 0;
 
+    printf("Stopping OTA... ");
     response = command_handler(command);
-    if(response[COMMAND_STATE] != COMMAND_ERROR) {
-        for(int i = 0; i < response[COMMAND_SIZE]; i++) printf("%02X ", response[i]);
-        putchar('\n');
-    } else print_error(response[COMMAND_PARAMETER]);
-    putchar('\n');
+    if(response[COMMAND_STATE] == COMMAND_ERROR) print_error(response[COMMAND_PARAMETER]);
+    else puts("Successful\n");
 
     free(response);
     return 0;

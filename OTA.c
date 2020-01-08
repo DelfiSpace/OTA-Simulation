@@ -136,6 +136,7 @@ uint8_t* command_handler(uint8_t* command) {
 }
 
 uint8_t* start_OTA(uint8_t slot_number) {
+    uint8_t error;
     uint8_t* data = malloc(3);
     data[0] = 0;
     data[1] = 0;
@@ -144,6 +145,8 @@ uint8_t* start_OTA(uint8_t slot_number) {
         state_flags |= UPDATE_FLAG;
         state_flags &= ~METADATA_FLAG;
         update_slot = slot_number;
+        uint8_t temp = PARTIAL;
+        if((error = fram_write_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number, &temp, 1)) != NO_ERROR) return throw_error(data, error);
     } else return throw_error(data, UPDATE_ALREADY_STARTED);
 
     return data;
@@ -234,9 +237,11 @@ bool check_partial_crc(uint8_t* data_block, uint16_t block_offset) {
 
 uint8_t* check_md5(uint8_t slot_number) {
     int error;
-    uint8_t* data = malloc(CRC_SIZE + 1 + 2);
+    uint8_t* data = malloc(3);
     data[0] = 0;
-    data[1] = CRC_SIZE + 1;
+    data[1] = 1;
+
+    uint8_t digest[CRC_SIZE];
 
     MD5_CTX md5_c;
     MD5_Init(&md5_c);
@@ -247,20 +252,20 @@ uint8_t* check_md5(uint8_t slot_number) {
     uint8_t meta_crc[CRC_SIZE];
     if((error = fram_read_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number + CRC_OFFSET, meta_crc, CRC_SIZE)) != NO_ERROR) return throw_error(data, error);
 
-    uint8_t* buffer = malloc(num_blocks * sizeof(uint8_t));
+    uint8_t* buffer = malloc(num_blocks * BLOCK_SIZE * sizeof(uint8_t));
     if(buffer == NULL) return throw_error(data, MEMORY_FULL);
 
-    if((error = slot_read_bytes(slot_number, 0, buffer, num_blocks)) != NO_ERROR) {
+    if((error = slot_read_bytes(slot_number, 0, buffer, num_blocks * BLOCK_SIZE)) != NO_ERROR) {
         free(buffer);
         return throw_error(data, error);
     }
 
-    MD5_Update(&md5_c, buffer, num_blocks);
+    MD5_Update(&md5_c, buffer, num_blocks * BLOCK_SIZE);
     free(buffer);
 
-    MD5_Final(&data[3], &md5_c);
+    MD5_Final(digest, &md5_c);
 
-    if(memcmp(&data[3], meta_crc, CRC_SIZE) == 0) {
+    if(memcmp(digest, meta_crc, CRC_SIZE) == 0) {
         data[2] = true;
     } else {
         data[2] = false;
@@ -270,13 +275,20 @@ uint8_t* check_md5(uint8_t slot_number) {
 }
 
 uint8_t* stop_OTA() {
+    int error;
     uint8_t* data = malloc(3);
     data[0] = 0;
-    data[1] = 0;
+    data[1] = 1;
 
     if((state_flags & UPDATE_FLAG) > 0) {
-        state_flags &= ~UPDATE_FLAG;
-        update_slot = 0;
+        data = check_md5(update_slot);
+        if(data[0] != NO_ERROR) return throw_error(data, data[0]);
+        if(data[2]) {
+            uint8_t temp = FULL;
+            if((error = fram_write_bytes((METADATA_SIZE + PAR_CRC_SIZE) * update_slot, &temp, 1)) != NO_ERROR) return throw_error(data, error);
+            state_flags &= ~UPDATE_FLAG;
+            update_slot = 0;
+        } else return throw_error(data, MD5_MISMATCH);
     } else return throw_error(data, UPDATE_NOT_STARTED);
 
     return data;
