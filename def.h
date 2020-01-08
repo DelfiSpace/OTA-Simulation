@@ -14,6 +14,9 @@
 
 #define MAX_COMMAND_SIZE 256
 
+#define ACKNOWLEDGE 13
+#define NOT_ACKNOWLEDGE 10
+
 static const char* slot_files[2] = {"slots/slot1.bin", "slots/slot2.bin"};
 static const char* fram_file = "slots/fram.bin";
 
@@ -36,20 +39,15 @@ enum command_states {
 
 enum flags {
     ERASE_FLAG = 0x01,
-    UPDATE_FLAG = 0x02
+    UPDATE_FLAG = 0x02,
+    METADATA_FLAG = 0x04
 };
 
 enum slot_status{
     EMPTY = 0x00,
     PARTIAL = 0x01,
-    FULL = 0x02,
-    TRANSMISSION = 0x04
+    FULL = 0x02
 };
-
-enum update_status{
-    IDLE,
-    UPDATE    
-} state;
 
 enum commands{
     START_OTA,
@@ -58,15 +56,8 @@ enum commands{
     SEND_PARTIAL_CRCS,
     SEND_BLOCK,
     CHECK_MD5,
-    STOP_OTA
-};
-
-struct Metadata
-{
-    uint8_t status;
-    uint32_t version;
-    uint16_t num_blocks;
-    uint8_t crc[CRC_SIZE];
+    STOP_OTA,
+    ERASE_SLOT
 };
 
 enum metadata_offset {

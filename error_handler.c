@@ -38,6 +38,12 @@ void print_error(enum error_codes error) {
     case UPDATE_ALREADY_STARTED:
         puts("The update has already been started.");
         break;
+    case METADATA_ALREADY_RECEIVED:
+        puts("The metadata has already been received.");
+        break;
+    case METADATA_NOT_RECEIVED:
+        puts("The metadata has not been received yet.");
+        break;
     default:
         break;
     }

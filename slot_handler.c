@@ -74,14 +74,6 @@ enum error_codes slot_read_bytes(uint8_t slot, uint32_t address, uint8_t* data, 
     return NO_ERROR;
 }
 
-// bool set_boot_slot(struct Slot* slot, bool always) {
-//     if(slot == NULL) return false;
-
-//     current_slot = slot;
-    
-//     return true;
-// }
-
 // bool erase(struct Slot* slot) {
 //     const char func_name[] = "erase";
 

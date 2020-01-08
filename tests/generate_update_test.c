@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     fseek(file, CRC_SIZE, SEEK_SET);
     fwrite(&version, sizeof(uint32_t), 1, file);
     fwrite(&num_blocks, sizeof(uint16_t), 1, file);
-    fseek(file, num_blocks, SEEK_CUR);
+    //fseek(file, num_blocks, SEEK_CUR);
     
     if (file != NULL) {
         int j = 0;
@@ -57,14 +57,14 @@ int main(int argc, char* argv[]) {
                 val = CRC_TABLE[val ^ temp];
             }
         }
-    	*(par_crcs + index) = val;
+    	//*(par_crcs + index) = val;
 
         MD5_Final(digest, &md5_c);
 
         rewind(file);
         fwrite(digest, sizeof(uint8_t), CRC_SIZE, file);
-        fseek(file, METADATA_SIZE - 1, SEEK_SET);
-        fwrite(par_crcs, sizeof(uint8_t), num_blocks, file);
+        //fseek(file, METADATA_SIZE - 1, SEEK_SET);
+        //fwrite(par_crcs, sizeof(uint8_t), num_blocks, file);
         fclose(file);
         free(par_crcs);
     }
