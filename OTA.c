@@ -94,8 +94,8 @@ uint8_t* command_handler(uint8_t* command) {
         break;
 
     case SEND_BLOCK:
-        if(command[COMMAND_PARAMETER_SIZE] <= BLOCK_SIZE + 1) {
-            data = receive_block(&command[COMMAND_PARAMETER + 1], command[COMMAND_PARAMETER]);
+        if(command[COMMAND_PARAMETER_SIZE] <= BLOCK_SIZE + 2) {
+            data = receive_block(&command[COMMAND_PARAMETER + 2], command[COMMAND_PARAMETER] | (command[COMMAND_PARAMETER + 1] << 8));
             response[COMMAND_PARAMETER_SIZE] = 0;
             if(*data != NO_ERROR) set_error(response, *data);
 
@@ -161,7 +161,7 @@ uint8_t* receive_metadata(uint8_t* metadata) {
     if((state_flags & UPDATE_FLAG) > 0) {
         if((state_flags & METADATA_FLAG) == 0) {
             if((error = fram_write_bytes((METADATA_SIZE + PAR_CRC_SIZE) * update_slot + 1, metadata, METADATA_SIZE - 1)) != NO_ERROR) return throw_error(data, error);
-            num_update_blocks = metadata[NUM_BLOCKS_OFFSET - 1];
+            num_update_blocks = metadata[NUM_BLOCKS_OFFSET - 1] | (metadata[NUM_BLOCKS_OFFSET] << 8);
             state_flags |= METADATA_FLAG;
         } else return throw_error(data, METADATA_ALREADY_RECEIVED);
     } else return throw_error(data, UPDATE_NOT_STARTED);
@@ -206,7 +206,7 @@ uint8_t* receive_block(uint8_t* data_block, uint16_t block_offset) {
     uint8_t* data = malloc(3);
     data[0] = 0;
     data[1] = 0;
-
+    
     if((state_flags & UPDATE_FLAG) > 0) {
         if((state_flags & METADATA_FLAG) > 0) {
             if((state_flags & PARTIAL_CRC_FLAG) == 0) {

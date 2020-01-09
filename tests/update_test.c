@@ -54,12 +54,13 @@ int main(int argc, char* argv[]) {
     fread(&command[COMMAND_PARAMETER], sizeof(uint8_t), METADATA_SIZE - 1, update);
     command[COMMAND_PARAMETER_SIZE] = METADATA_SIZE - 1;
 
-    num_blocks = command[COMMAND_PARAMETER + NUM_BLOCKS_OFFSET - 1];
+    num_blocks = command[COMMAND_PARAMETER + NUM_BLOCKS_OFFSET - 1] | (command[COMMAND_PARAMETER + NUM_BLOCKS_OFFSET] << 8);
 
     printf("Sending metadata... ");
     response = command_handler(command);
     if(response[COMMAND_STATE] == COMMAND_ERROR) print_error(response[COMMAND_PARAMETER]);
     else puts("Successful\n");
+    printf("Number of blocks to be sent: %d\n\n", num_blocks);
     
     partials = malloc(num_blocks);
     get_partials(partials, update, num_blocks);
@@ -71,7 +72,7 @@ int main(int argc, char* argv[]) {
         memcpy(&command[COMMAND_PARAMETER], partials + count * BLOCK_SIZE, BLOCK_SIZE);
         command[COMMAND_PARAMETER_SIZE] = BLOCK_SIZE;
         
-        printf("Sending partials(%d): ", BLOCK_SIZE);
+        printf("%d: Sending partials(%d): ", count, BLOCK_SIZE);
         for(int i = 0; i < BLOCK_SIZE; i++) printf("%02X ", command[COMMAND_PARAMETER + i]);
 
         response = command_handler(command);
@@ -84,7 +85,7 @@ int main(int argc, char* argv[]) {
         memcpy(&command[COMMAND_PARAMETER], partials + count * BLOCK_SIZE, num_blocks % BLOCK_SIZE);
         command[COMMAND_PARAMETER_SIZE] = num_blocks % BLOCK_SIZE;
 
-        printf("Sending partials(%d): ", num_blocks % BLOCK_SIZE);
+        printf("%d: Sending partials(%d): ", count, num_blocks % BLOCK_SIZE);
         for(int i = 0; i < num_blocks % BLOCK_SIZE; i++) printf("%02X ", command[COMMAND_PARAMETER + i]);
 
         response = command_handler(command);
@@ -93,6 +94,8 @@ int main(int argc, char* argv[]) {
     }
     putchar('\n');
 
+    free(partials);
+
     //Send data blocks
     rewind(update);
     fseek(update, METADATA_SIZE - 1, SEEK_SET);
@@ -100,11 +103,12 @@ int main(int argc, char* argv[]) {
     command[COMMAND_METHOD] = SEND_BLOCK;
     for(int i = 0; i < num_blocks; i++) {
         command[COMMAND_PARAMETER] = i;
-        fread(&command[COMMAND_PARAMETER + 1], sizeof(uint8_t), BLOCK_SIZE, update);
-        command[COMMAND_PARAMETER_SIZE] = BLOCK_SIZE + 1;
+        command[COMMAND_PARAMETER + 1] = i >> 8;
+        fread(&command[COMMAND_PARAMETER + 2], sizeof(uint8_t), BLOCK_SIZE, update);
+        command[COMMAND_PARAMETER_SIZE] = BLOCK_SIZE + 2;
         
-        printf("Sending block: ");
-        for(int i = 0; i < BLOCK_SIZE; i++) printf("%02X ", command[COMMAND_PARAMETER + i + 1]);
+        printf("%d: Sending block: ", i);
+        for(int i = 0; i < BLOCK_SIZE; i++) printf("%02X ", command[COMMAND_PARAMETER + i + 2]);
 
         response = command_handler(command);
         if(response[COMMAND_STATE] == COMMAND_ERROR) print_error(response[COMMAND_PARAMETER]);
@@ -120,8 +124,10 @@ int main(int argc, char* argv[]) {
     printf("Stopping OTA... ");
     response = command_handler(command);
     if(response[COMMAND_STATE] == COMMAND_ERROR) print_error(response[COMMAND_PARAMETER]);
-    else puts("Successful\n");
+    else puts("MD5 Correct\n");
 
     free(response);
+    puts("Press enter to continue ...");
+    getchar();
     return 0;
 }
