@@ -7,7 +7,7 @@
 #include "../def.h"
 
 uint32_t version = 0xd03778b;
-uint32_t num_bytes = 3000;
+uint32_t num_bytes = 4000;
 
 int main(int argc, char* argv[]) {
     srand((unsigned int) time(NULL));

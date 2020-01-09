@@ -224,18 +224,15 @@ uint8_t* receive_block(uint8_t* data_block, uint16_t block_offset) {
                         if((error = slot_write_bytes(update_slot, block_offset * BLOCK_SIZE, data_block, BLOCK_SIZE)) != NO_ERROR) return throw_error(data, error);
                     } else {
                         if(missed_blocks.arr == NULL) {
-                            missed_blocks.arr = calloc(BLOCK_SIZE / 2, sizeof(uint16_t));
-                            missed_blocks.arr_size = BLOCK_SIZE / 2;
+                            missed_blocks.arr = malloc((BLOCK_SIZE / 2 - 1) * sizeof(uint16_t));
+                            missed_blocks.arr_size = BLOCK_SIZE / 2 - 1;
                         }
                         if(missed_blocks.num >= missed_blocks.arr_size) {
-                            missed_blocks.arr = realloc(missed_blocks.arr, missed_blocks.arr_size + BLOCK_SIZE / 2);
-                            missed_blocks.arr_size += BLOCK_SIZE / 2;
+                            missed_blocks.arr = realloc(missed_blocks.arr, (missed_blocks.arr_size + (BLOCK_SIZE / 2 - 1)) * sizeof(uint16_t));
+                            missed_blocks.arr_size += BLOCK_SIZE / 2 - 1;
                         }
                         missed_blocks.arr[missed_blocks.num] = block_offset;
                         missed_blocks.num++;
-                        printf("\nMissed block array: ");
-                        for(int i = 0; i < missed_blocks.arr_size; i++) printf("%d ", missed_blocks.arr[i]);
-                        puts("\n");
                         return throw_error(data, CRC_MISMATCH);
                     } 
                 } else return throw_error(data, PARAMETER_MISMATCH);
