@@ -1,4 +1,4 @@
-# OTA-test
+# OTA-Simulation
 This is a C-program that emulates the flash memory of a microcontroller, so that a OTA(Over-the-air) software update can be implemented. 
 
 ### Compilation
