@@ -17,6 +17,12 @@ uint8_t state_flags = 0;
 uint16_t num_update_blocks = 0;
 uint16_t received_par_crcs = 0;
 
+struct DynamicArray {
+    uint16_t num;
+    uint16_t* arr;
+    uint16_t arr_size;
+} missed_blocks;
+
 uint8_t* start_OTA(uint8_t slot_number);
 
 uint8_t* receive_metadata(uint8_t* metadata);
@@ -147,6 +153,9 @@ uint8_t* start_OTA(uint8_t slot_number) {
         update_slot = slot_number;
         uint8_t temp = PARTIAL;
         if((error = fram_write_bytes((METADATA_SIZE + PAR_CRC_SIZE) * slot_number, &temp, 1)) != NO_ERROR) return throw_error(data, error);
+        missed_blocks.arr = NULL;
+        missed_blocks.arr_size = 0;
+        missed_blocks.num = 0;
     } else return throw_error(data, UPDATE_ALREADY_STARTED);
 
     return data;
@@ -206,14 +215,29 @@ uint8_t* receive_block(uint8_t* data_block, uint16_t block_offset) {
     uint8_t* data = malloc(3);
     data[0] = 0;
     data[1] = 0;
-    
+
     if((state_flags & UPDATE_FLAG) > 0) {
         if((state_flags & METADATA_FLAG) > 0) {
             if((state_flags & PARTIAL_CRC_FLAG) == 0) {
                 if(received_par_crcs < num_update_blocks * BLOCK_SIZE) {
                     if(check_partial_crc(data_block, block_offset)) {
                         if((error = slot_write_bytes(update_slot, block_offset * BLOCK_SIZE, data_block, BLOCK_SIZE)) != NO_ERROR) return throw_error(data, error);
-                    } else return throw_error(data, CRC_MISMATCH);
+                    } else {
+                        if(missed_blocks.arr == NULL) {
+                            missed_blocks.arr = calloc(BLOCK_SIZE / 2, sizeof(uint16_t));
+                            missed_blocks.arr_size = BLOCK_SIZE / 2;
+                        }
+                        if(missed_blocks.num >= missed_blocks.arr_size) {
+                            missed_blocks.arr = realloc(missed_blocks.arr, missed_blocks.arr_size + BLOCK_SIZE / 2);
+                            missed_blocks.arr_size += BLOCK_SIZE / 2;
+                        }
+                        missed_blocks.arr[missed_blocks.num] = block_offset;
+                        missed_blocks.num++;
+                        printf("\nMissed block array: ");
+                        for(int i = 0; i < missed_blocks.arr_size; i++) printf("%d ", missed_blocks.arr[i]);
+                        puts("\n");
+                        return throw_error(data, CRC_MISMATCH);
+                    } 
                 } else return throw_error(data, PARAMETER_MISMATCH);
             } else return throw_error(data, PARTIAL_ALREADY_RECEIVED);    
         } else return throw_error(data, METADATA_NOT_RECEIVED);
