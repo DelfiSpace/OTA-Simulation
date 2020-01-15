@@ -12,13 +12,14 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 uint8_t state_flags = 0;
 uint8_t update_slot;
 uint16_t num_update_blocks = 0;
 uint16_t received_par_crcs = 0;
 
-uint8_t payload_data[64] = {0};
+uint8_t* payload_data;
 uint8_t payload_size;
 
 void start_OTA(unsigned char slot_number);
@@ -48,8 +49,9 @@ uint8_t* command_handler(uint8_t* command) {
         workingBuffer[COMMAND_SOURCE] = command[COMMAND_DESTINATION];
         workingBuffer[COMMAND_SIZE] = PAYLOAD_SIZE_OFFSET;
         workingBuffer[COMMAND_SERVICE] = SOFTWAREUPDATE_SERVICE;
-        workingBuffer[COMMAND_RESPONSE] = COMMAND_RESPONSE;
+        workingBuffer[COMMAND_RESPONSE] = COMMAND_REPLY;
 
+        payload_data = workingBuffer;
         payload_size = PAYLOAD_SIZE_OFFSET;
 
         switch (command[COMMAND_METHOD]) {
@@ -128,7 +130,6 @@ uint8_t* command_handler(uint8_t* command) {
         }
 
         workingBuffer[COMMAND_SIZE] = payload_size;
-        memcpy(&workingBuffer[COMMAND_DATA], &payload_data[COMMAND_DATA], 64 - NUM_BLOCKS_OFFSET + 3);
 
         // command processed
         return workingBuffer;
@@ -156,7 +157,6 @@ void start_OTA(unsigned char slot_number) {
 //            missed_blocks.arr = nullptr;
 //            missed_blocks.arr_size = 0;
 //            missed_blocks.num = 0;
-
         } else return throw_error(SLOT_NOT_EMPTY);
     } else return throw_error(UPDATE_ALREADY_STARTED);
 }

@@ -35,9 +35,8 @@
  * compile-time configuration.
  */
 
-#include <string.h>
-
 #include "md5.h"
+#include <string.h>
 
 /*
  * The basic MD5 functions.
@@ -256,6 +255,7 @@ void MD5_Update(MD5_CTX *ctx, const void *data, unsigned long size)
 void MD5_Final(unsigned char *result, MD5_CTX *ctx)
 {
 	unsigned long used, available;
+	unsigned int i;
 
 	used = ctx->lo & 0x3f;
 
@@ -264,13 +264,13 @@ void MD5_Final(unsigned char *result, MD5_CTX *ctx)
 	available = 64 - used;
 
 	if (available < 8) {
-		memset(&ctx->buffer[used], 0, available);
+		for(i = 0; i < available; i++) ctx->buffer[used + i] = 0;
 		body(ctx, ctx->buffer, 64);
 		used = 0;
 		available = 64;
 	}
 
-	memset(&ctx->buffer[used], 0, available - 8);
+	for(i = 0; i < available - 8; i++) ctx->buffer[used + i] = 0;
 
 	ctx->lo <<= 3;
 	OUT(&ctx->buffer[56], ctx->lo)
@@ -283,5 +283,13 @@ void MD5_Final(unsigned char *result, MD5_CTX *ctx)
 	OUT(&result[8], ctx->c)
 	OUT(&result[12], ctx->d)
 
-	memset(ctx, 0, sizeof(*ctx));
+	*ctx = (MD5_CTX){0};
+//	lo = 0;
+//	hi = 0;
+//    a = 0;
+//    b = 0;
+//    c = 0;
+//    d = 0;
+//    for(i = 0; i < 64; i++) buffer[i] = 0;
+//    for(i = 0; i < 16; i++) block[i] = 0;
 }
