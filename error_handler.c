@@ -1,18 +1,6 @@
 #include "error_handler.h"
 #include "def.h"
 
-uint8_t* throw_error(uint8_t* data, enum error_codes error) {
-    *data = error;
-    return data;
-}
-
-void set_error(uint8_t* data, enum error_codes error) {
-    data[COMMAND_STATE] = COMMAND_ERROR;
-    data[COMMAND_PARAMETER_SIZE] = 1;
-    data[COMMAND_PARAMETER] = error;
-    data[COMMAND_SIZE]++;
-}
-
 void print_error(enum error_codes error) {
     printf("Error(%d): ", error);
     switch (error)
@@ -55,6 +43,12 @@ void print_error(enum error_codes error) {
         break;
     case MD5_MISMATCH:
         puts("The md5 hash does no match.");
+        break;
+    case OFFSET_OUT_OF_RANGE:
+        puts("The requested offset is out of range.");
+        break;
+    case SLOT_NOT_EMPTY:
+        puts("The requested slot is not empty yet.");
         break;
     default:
         break;

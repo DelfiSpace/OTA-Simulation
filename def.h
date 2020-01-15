@@ -4,6 +4,10 @@
 #ifndef DEF_H_
 #define DEF_H_
 
+#define SOFTWAREUPDATE_SERVICE  18
+
+#define PAYLOAD_SIZE_OFFSET 3
+
 #define FRAM_SIZE 32768
 #define BLOCK_SIZE 32
 #define CRC_SIZE 16
@@ -24,11 +28,10 @@ enum bus_offsets {
     COMMAND_DESTINATION,
     COMMAND_SIZE,
     COMMAND_SOURCE,
-    COMMAND_STATE,
     COMMAND_SERVICE,
+    COMMAND_RESPONSE,
     COMMAND_METHOD,
-    COMMAND_PARAMETER_SIZE,
-    COMMAND_PARAMETER
+    COMMAND_DATA
 };
 
 enum command_states {
@@ -38,6 +41,7 @@ enum command_states {
 };
 
 enum flags {
+    NO_FLAG = 0x00,
     ERASE_FLAG = 0x01,
     UPDATE_FLAG = 0x02,
     METADATA_FLAG = 0x04,
@@ -55,6 +59,7 @@ enum commands{
     RECEIVE_METADATA,
     SEND_METADATA,
     SEND_PARTIAL_CRCS,
+    RECEIVE_MISSED_PARTIALS,
     SEND_BLOCK,
     CHECK_MD5,
     STOP_OTA,

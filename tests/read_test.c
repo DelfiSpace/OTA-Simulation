@@ -34,15 +34,15 @@ void print_metadata(uint8_t* metadata) {
 int main(int argc, char* argv[]) {
     uint8_t command[256] = {0};
     command[COMMAND_DESTINATION] = 18;
-    command[COMMAND_SIZE] = 5;
-    command[COMMAND_STATE] = COMMAND_REQUEST;
+    command[COMMAND_SIZE] = 1 + PAYLOAD_SIZE_OFFSET;
+    command[COMMAND_SERVICE] = SOFTWAREUPDATE_SERVICE;
+    command[COMMAND_RESPONSE] = COMMAND_REQUEST;
     command[COMMAND_METHOD] = RECEIVE_METADATA;
-    command[COMMAND_PARAMETER] = 1;
-    command[COMMAND_PARAMETER_SIZE] = 1;
+    command[COMMAND_DATA] = 1;
 
     uint8_t* response = command_handler(command);
-    if(response[COMMAND_STATE] != COMMAND_ERROR) print_metadata(&response[COMMAND_PARAMETER]);
-    else print_error(response[COMMAND_PARAMETER]);
+    if(response[COMMAND_RESPONSE] != COMMAND_ERROR) print_metadata(&response[COMMAND_DATA]);
+    else print_error(response[COMMAND_DATA]);
 
     free(response);
     return 0;

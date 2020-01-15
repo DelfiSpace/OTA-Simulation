@@ -17,11 +17,12 @@ enum error_codes{
     PARTIAL_ALREADY_RECEIVED,
     PARTIAL_NOT_RECEIVED,
     CRC_MISMATCH,
-    MD5_MISMATCH
+    MD5_MISMATCH,
+    OFFSET_OUT_OF_RANGE,
+    SLOT_NOT_EMPTY
 };
 
-uint8_t* throw_error(uint8_t* data, enum error_codes error);
-void set_error(uint8_t* data, enum error_codes error);
+//void throw_error(unsigned char error);
 void print_error(enum error_codes error);
 
 #endif
